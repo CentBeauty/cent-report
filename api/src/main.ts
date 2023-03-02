@@ -1,0 +1,33 @@
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { authMiddleware } from './v1/middleware/auth.middleware';
+import * as dotenv from 'dotenv';
+import { connectRedis } from './v1/utils/redis';
+dotenv.config();
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  /* Cors */
+  let whitelist = ['http://localhost:3001',"http://192.168.110.207:3001"];
+  app.enableCors({
+    origin: function (origin, callback) {
+      if (!origin || whitelist.indexOf(origin) !== -1) {
+        callback(null, true)
+      } else {
+        callback(new Error('Not allowed by CORS'))
+      }
+    },
+  });
+
+  /* Middleware */
+
+  app.use(authMiddleware);
+
+
+  app.setGlobalPrefix(`api/${process.env.VERSION}`);
+  await app.listen(process.env.PORT);
+  // await connectRedis()
+  console.log(`Application is running on: ${await app.getUrl()}`);
+}
+
+bootstrap();

@@ -1,0 +1,31 @@
+.logo {
+    height: 32px;
+    margin: 16px;
+  }
+.box{
+  box-shadow: rgba(149, 157, 165, 0.2) 0px 8px 24px;
+  position: -webkit-sticky;
+  position: sticky;
+  background-color: aliceblue;
+  bottom: 0;
+  z-index: 1;
+}
+.menu-desktop{
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+}
+@media (max-width: 820px) {
+  .mobile{
+      display: none;
+  }
+}
+
+@media (min-width: 820px) {
+  .desktop{
+      display: none;
+  }
+}
+.shadow-avatar{
+  box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+}
