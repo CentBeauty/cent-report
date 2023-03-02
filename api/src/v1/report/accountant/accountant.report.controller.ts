@@ -9,12 +9,13 @@ import {
     Put,
     ParseIntPipe,
     UseGuards,
-    Request
+    Request,
+    UseInterceptors,
+    CacheInterceptor
 } from '@nestjs/common';
 import { AccountantReportsService } from "./accountant.report.service"
-
 @Controller('accountant')
-
+@UseInterceptors(CacheInterceptor)
 export class AccountantReportsController {
     constructor(
         private readonly AccountantReportsService: AccountantReportsService,
