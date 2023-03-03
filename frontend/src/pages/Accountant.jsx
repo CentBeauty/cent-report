@@ -13,6 +13,7 @@ import Collection from '../components/accountant/Collection'
 import CountServiceKtv from '../components/accountant/CountServiceKtv';
 import PackageNotUse from '../components/accountant/PackageNotUse';
 import CustomerPaid from '../components/accountant/CustomerPaid';
+import Customer from '../components/accountant/Customer';
 export default function AccountantPage() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
@@ -70,6 +71,11 @@ export default function AccountantPage() {
             key: 9,
             label: `Phải thu khách hàng`,
             children: <CustomerPaid />,
+        },
+        {
+            key: 10,
+            label: `Bảng tổng hợp về khách hàng `,
+            children: <Customer />,
         },
     ];
     useEffect(() => {

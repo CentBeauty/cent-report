@@ -61,4 +61,8 @@ export class AccountantReportsController {
     async customerPaid(@Query() query) {
         return await this.AccountantReportsService.customerPaid(query)
     }
+    @Get('/customers')
+    async customers(@Query() query) {
+        return await this.AccountantReportsService.customers(query)
+    }
 }

@@ -704,16 +704,16 @@ export class AccountantReportsService {
                         remain_amount: true,
                         created_at: true
                     },
-                    customer:{
-                        id:true,
-                        full_name:true
+                    customer: {
+                        id: true,
+                        full_name: true
                     }
                 },
                 where: queryOptions,
                 relations: {
                     transaction: true,
                     orderItem: true,
-                    customer:true
+                    customer: true
                 },
                 order: {
                     order_at: (sortBy && sortBy.length > 0) ? sortBy === SortByEnum.DATE_ASC ? "ASC" : "DESC" : "DESC"
@@ -730,7 +730,7 @@ export class AccountantReportsService {
                     const compareDateTransaction = moment(new Date(y.created_at), "YYYY-MM-DD HH:mm:ss");
                     return compareDateTransaction.isBetween(s, e)
                 })
-                return{
+                return {
                     ...x,
                     owedStart: x.transaction.length > 0 ? x.transaction[0].remain_amount : 0,
                     totalInDate: _.sumBy(x.transaction, function (o) { return o.paid_amount }) || 0,
@@ -738,7 +738,100 @@ export class AccountantReportsService {
                     transaction: filter
                 }
             })
-            return helper.success({...data,items:newItems})
+            return helper.success({ ...data, items: newItems })
+        } catch (error) {
+            console.error(error)
+            return helper.error(error)
+        }
+    }
+    async handleCustomerOldNew(customerIds, orderCodes) {
+        var customerNews = []
+        if (customerIds.length == 0) {
+            return customerNews
+        }
+
+        var query = this.customerRepository.createQueryBuilder('customer')
+            .where("customer.soft_delete IS NULL")
+            .andWhere("customer.id IN (:...ids)", { ids: customerIds })
+            .andWhere("order.soft_delete IS NULL")
+            .andWhere('order.status = 3')
+            .innerJoinAndSelect("customer.order", "order")
+
+        var customers = await query.getMany()
+
+
+        for (let item of customers) {
+            var statusNew = false
+            if (item.order) {
+                var orderMinOrderAt = _.minBy(item.order, 'order_at')
+                if (orderMinOrderAt && orderCodes.includes(orderMinOrderAt.order_code)) {
+                    statusNew = true
+                }
+            }
+
+            if (statusNew) {
+                customerNews.push(item.id)
+            }
+        }
+
+
+        return customerNews
+    }
+
+    async customers(query) {
+        try {
+            const { startDate, endDate } = query
+            const { customers, total ,packageCount} = await async.parallel({
+                customers: (cb) => {
+                    var customerQuery = this.customerRepository
+                        .createQueryBuilder("customer")
+                        .innerJoinAndSelect("customer.order", "order")
+                        .where('order.soft_delete IS NULL')
+                        .andWhere('order.status = 3')
+                        .orderBy('order.order_at', 'DESC')
+                    customerQuery.andWhere('order.order_at BETWEEN :start_at AND :end_at', { start_at: startOfDay(new Date(startDate)), end_at: endOfDay(new Date(endDate)) })
+                    customerQuery.getMany().then(rs => {
+                        var orderCodes = []
+                        var customerId = []
+                        for (let item of rs) {
+                            var orderMinOrderAt = _.minBy(item.order, 'order_at')
+                            customerId.push(item.id)
+                            orderCodes.push(orderMinOrderAt.order_code)
+                        }
+                        const customerIds = _.uniq(customerId)
+                        this.handleCustomerOldNew(customerIds, orderCodes).then(rs => {
+                            cb(null, { customerIds, customerNewOlds: rs })
+                        })
+                    })
+                },
+                total: (cb) => {
+                    this.customerRepository
+                        .createQueryBuilder("customer")
+                        .andWhere('customer.created_at <= :start_at', { start_at: endOfDay(new Date(endDate)) }).cache(true).getCount().then(rs => {
+                            cb(null, rs)
+                        })
+                },
+                packageCount: (cb) => {
+                    this.packageRepository.createQueryBuilder("package")
+                    .where('package.expiration_date BETWEEN :start_at AND :end_at', { start_at: startOfDay(new Date(startDate)), end_at: endOfDay(new Date(endDate)) })
+                    .andWhere("package.status = 1")
+                    .getMany().then(rs=>{
+                        cb(null,rs)
+                    })
+                }
+            })
+
+
+
+            const ob = {
+                newCount: customers.customerNewOlds.length || 0,
+                activeCount: (customers.customerIds.length - customers.customerNewOlds.length) | 0,
+                total: total,
+                oldCount: total - customers.customerNewOlds.length || 0,
+                package:packageCount
+            }
+
+            return helper.success(ob)
         } catch (error) {
             console.error(error)
             return helper.error(error)
