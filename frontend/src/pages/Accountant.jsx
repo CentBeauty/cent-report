@@ -14,6 +14,7 @@ import CountServiceKtv from '../components/accountant/CountServiceKtv';
 import PackageNotUse from '../components/accountant/PackageNotUse';
 import CustomerPaid from '../components/accountant/CustomerPaid';
 import Customer from '../components/accountant/Customer';
+import ReceiptCate from '../components/accountant/ReceiptCate';
 export default function AccountantPage() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
@@ -76,6 +77,11 @@ export default function AccountantPage() {
             key: 10,
             label: `Bảng tổng hợp về khách hàng `,
             children: <Customer />,
+        },
+        {
+            key: 11,
+            label: `Dso trong tháng Nhóm dịch vụ`,
+            children: <ReceiptCate />,
         },
     ];
     useEffect(() => {

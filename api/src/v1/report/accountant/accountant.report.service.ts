@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Repository, Between, In, Raw, Not } from 'typeorm';
+import { IsNull, Repository, Between, In, Raw, Not, LessThan } from 'typeorm';
 import { User } from '../../entities/users.entity';
 import { Order } from "../../entities/orders.entity"
 import { Store } from "../../entities/stores.entity"
@@ -781,7 +781,7 @@ export class AccountantReportsService {
     async customers(query) {
         try {
             const { startDate, endDate } = query
-            const { customers, total ,packageCount} = await async.parallel({
+            const { customers, total, packageCount } = await async.parallel({
                 customers: (cb) => {
                     var customerQuery = this.customerRepository
                         .createQueryBuilder("customer")
@@ -812,12 +812,29 @@ export class AccountantReportsService {
                         })
                 },
                 packageCount: (cb) => {
-                    this.packageRepository.createQueryBuilder("package")
-                    .where('package.expiration_date BETWEEN :start_at AND :end_at', { start_at: startOfDay(new Date(startDate)), end_at: endOfDay(new Date(endDate)) })
-                    .andWhere("package.status = 1")
-                    .getMany().then(rs=>{
-                        cb(null,rs)
-                    })
+                    const end = moment(new Date(endDate)).endOf("day").format("YYYY-MM-DD HH:mm:ss")
+                    this.customerRepository.findAndCount({
+                        select: {
+                            id: true,
+                            created_at: true,
+                            soft_delete: true,
+                            packages: {
+                                id: true,
+                                status: true
+                            }
+                        },
+                        where: {
+                            soft_delete: IsNull(),
+                            created_at: LessThan(new Date(end)),
+                            packages: {
+                                status: 1
+                            }
+                        },
+                        relations: {
+                            packages: true
+                        },
+                        cache: true
+                    }).then(rs => cb(null, rs[1]))
                 }
             })
 
@@ -828,10 +845,65 @@ export class AccountantReportsService {
                 activeCount: (customers.customerIds.length - customers.customerNewOlds.length) | 0,
                 total: total,
                 oldCount: total - customers.customerNewOlds.length || 0,
-                package:packageCount
+                package: packageCount
             }
 
             return helper.success(ob)
+        } catch (error) {
+            console.error(error)
+            return helper.error(error)
+        }
+    }
+    async packageReceipt() {
+        try {
+            const startOfMonth = moment().startOf('month').format('YYYY-MM-DD HH:mm:ss');
+            const now = moment().endOf('day').format('YYYY-MM-DD HH:mm:ss');
+
+            const data = await this.packageRepository.find({
+                select: {
+                    id: true,
+                    sale_card: true,
+                    rule_price: true,
+                    created_at: true,
+                    product: {
+                        id: true,
+                        category_id: true,
+                        category: {
+                            id: true,
+                        }
+                    }
+                },
+                where: {
+                    product: {
+                        category: {
+                            id: In([2, 4, 5])
+                        }
+                    },
+                    created_at: Between(
+                        new Date(startOfMonth),
+                        new Date(now)
+                    )
+                },
+                relations: {
+                    product: {
+                        category: true
+                    }
+                }
+            })
+            const mapData = data.map(x => {
+                return {
+                    ...x,
+                    cate: x.product.category_id
+                }
+            })
+
+            const grouped = _.groupBy(mapData, (x) => x.cate);
+            const res : LooseObject = {}
+            for (const key of Object.keys(grouped)) {
+                const total = _.sumBy(grouped[key], function (o) { return (o.rule_price > 0 ? o.rule_price : o.sale_card) })
+                res[key] = total
+            }
+            return helper.success(res)
         } catch (error) {
             console.error(error)
             return helper.error(error)

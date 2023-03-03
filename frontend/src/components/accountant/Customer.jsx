@@ -11,13 +11,15 @@ const dateFormat = 'YYYY-mm-DD';
 const { RangePicker } = DatePicker;
 export default function Customer() {
     const [isLoading, setIsLoading] = useState(false)
-    const [data, setData] = useState([])
-    const [total, setTotal] = useState(0)
-    const [page, setPage] = useState(1)
-    const [limit, setLimit] = useState(20)
+    const [data, setData] = useState({
+        newCount: 0,
+        activeCount: 0,
+        total: 0,
+        oldCount: 0,
+        package: 0
+    })
     const [startDate, setStartDate] = useState(dayjs().add(-7, 'd').format('YYYY-MM-DD'))
     const [endDate, setEndDate] = useState(dayjs().format('YYYY-MM-DD'))
-    const [sortBy, setSortBy] = useState("date_desc")
     const rangePresets = [
         {
             label: 'Last 7 Days',
@@ -36,15 +38,38 @@ export default function Customer() {
             value: [dayjs().add(-90, 'd'), dayjs()],
         },
     ];
+    const getData = async (start = "", end = "") => {
+        setIsLoading(true)
+        try {
+            const res = await axiosService(`reports/accountant/customers?startDate=${start}&endDate=${end}`)
+            if (res.data.code === 200) {
+                setData(res.data.data)
+                setIsLoading(false)
+            } else {
+                console.log(res)
+                message.error(res.data.message)
+            }
+        } catch (error) {
+            console.error(error)
+            message.error("Đã có lỗi xảy ra")
+            setIsLoading(false)
+        }
+    }
     const handleFilter = async () => {
-        await getData(limit, page, startDate, endDate, sortBy)
+        await getData(startDate, endDate)
     }
     const onChangeDate = (x, y) => {
         setStartDate(y[0])
         setEndDate(y[1])
     }
+    useEffect(() => {
+        async function fetchData() {
+            await getData(startDate, endDate)
+        }
+        fetchData()
+    }, [])
     return (
-        <Spin tip="Đang tải. Xin vui lòng chờ" size="large" spinning={isLoading}>
+        <Spin tip="Xin vui lòng chờ. Dữ liệu nhiều có thể sẽ mất nhiều thời gian" size="large" spinning={isLoading}>
             <Row>
                 <Col xxl={6} xs={6} >
                     <span>Khoảng thời gian:</span>
@@ -76,11 +101,12 @@ export default function Customer() {
                         xs: 1,
                     }}
                 >
-                    <Descriptions.Item label="Tổng số lương khách">Cloud Database</Descriptions.Item>
-                    <Descriptions.Item label="Số lượng khách hàng mới">Prepaid</Descriptions.Item>
-                    <Descriptions.Item label="Số lượng khách hàng cũ">18:00:00</Descriptions.Item>
-                    <Descriptions.Item label="Số lượng khách hàng lũy kế">$80.00</Descriptions.Item>
-                    <Descriptions.Item label="Số lượng khách hàng active">$20.00</Descriptions.Item>
+                    <Descriptions.Item label="Tổng số lương khách">{data.total}</Descriptions.Item>
+                    <Descriptions.Item label="Số lượng khách hàng mới">{data.newCount}</Descriptions.Item>
+                    <Descriptions.Item label="Số lượng khách hàng cũ">{data.oldCount}</Descriptions.Item>
+                    <Descriptions.Item label="Số lượng khách hàng lũy kế">{0}</Descriptions.Item>
+                    <Descriptions.Item label="Số lượng khách hàng active">{data.activeCount}</Descriptions.Item>
+                    <Descriptions.Item label="Số lượng khách hàng liệu trình">{data.package}</Descriptions.Item>
                 </Descriptions>
             </div>
         </Spin>
