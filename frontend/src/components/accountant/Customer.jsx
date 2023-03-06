@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react"
-import { Spin, Pagination, Input, DatePicker, Button, message, Select, Descriptions } from "antd"
+import { Spin, DatePicker, Button, message, Descriptions } from "antd"
 import { Row, Col } from "react-bootstrap"
 import Table from "ant-responsive-table";
 import axiosService from "../../utils/axios.config";
-import { SearchOutlined, CloseOutlined, ProfileOutlined, MobileOutlined } from '@ant-design/icons';
+import { SearchOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 dayjs.extend(customParseFormat);
-const dateFormat = 'YYYY-mm-DD';
 const { RangePicker } = DatePicker;
 export default function Customer() {
     const [isLoading, setIsLoading] = useState(false)

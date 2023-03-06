@@ -1,19 +1,14 @@
 import { useEffect, useState } from "react"
-import { Spin, Pagination, Input, DatePicker, Button, message, Select, Descriptions } from "antd"
-import { Row, Col } from "react-bootstrap"
-import Table from "ant-responsive-table";
+import { Spin, message, Descriptions } from "antd"
 import axiosService from "../../utils/axios.config";
-import { SearchOutlined, CloseOutlined, ProfileOutlined, MobileOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import currencyConvert from '../../utils/currency';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 dayjs.extend(customParseFormat);
-const dateFormat = 'YYYY-mm-DD';
-const { RangePicker } = DatePicker;
 export default function ReceiptCate(){
     const [isLoading, setIsLoading] = useState(false)
     const [data, setData] = useState({})
-    const getData = async (limitFetch = 20, pageFetch = 1,sort="date_desc") => {
+    const getData = async () => {
         setIsLoading(true)
         try {
             const res = await axiosService(`reports/accountant/package-receipt`)
