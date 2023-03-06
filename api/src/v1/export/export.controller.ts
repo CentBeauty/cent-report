@@ -30,4 +30,10 @@ export class ExportCustomerServiceController {
     async exportOrderList() {
         return await this.exportService.exportCustomerService();
     }
+
+    @Get('bill')
+    async exportBill(@Query() query) {
+        const { start, end,limit,page } = query
+        return await this.exportService.exportBill(start, end,limit,page)
+    }
 }

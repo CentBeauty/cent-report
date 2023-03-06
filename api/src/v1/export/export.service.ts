@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull, In, Brackets } from 'typeorm';
+import { Repository, IsNull, In, Brackets, Between } from 'typeorm';
 import { format, startOfDay, endOfDay } from 'date-fns'
 import { Order } from '../entities/orders.entity'
 import * as helper from '../helpers/response';
@@ -14,7 +14,13 @@ import { Package } from '../entities/package.entity'
 import { Workbook } from 'exceljs'
 import * as tmp from 'tmp'
 import * as AWS from "aws-sdk";
+import * as moment from 'moment';
 import * as dotenv from 'dotenv';
+import { addRowSheet } from '../utils/connectGoogleSheet';
+
+import {
+    paginate,
+} from 'nestjs-typeorm-paginate';
 dotenv.config();
 
 // import * as AWS from "aws-sdk";
@@ -54,7 +60,7 @@ export class ExportService {
             let dataOrderItem = await this.orderRepo.createQueryBuilder('order')
                 .where("order.soft_delete IS NULL")
                 .andWhere("order.status = 3")
-                .andWhere("orderItem.product_name like :name",{ name:`%${"bhvv"}%` })
+                .andWhere("orderItem.product_name like :name", { name: `%${"bhvv"}%` })
                 .innerJoinAndSelect("order.customers", "customers")
                 .leftJoinAndSelect("order.orderItem", "orderItem")
                 // .andWhere(
@@ -65,14 +71,13 @@ export class ExportService {
                 .getRawMany()
 
             var data = await this.exportDataOrderDetail(dataOrderItem)
-           return data
-           
+            return data
+
         } catch (error) {
             console.error(error)
             return helper.error(error, "exprot.service")
         }
     }
-
     async exportDataOrderDetail(dataOrderItems) {
         var mapCustomerProducts = {}
         var row1 = constant.defaultExportOrderDetail
@@ -88,14 +93,14 @@ export class ExportService {
                 && !item.orderItem_employee_service_name3
                 && !item.orderItem_employee_service_name4
                 && !item.orderItem_employee_service_name5
-                ) {
-                    filter = true
+            ) {
+                filter = true
             }
 
             if (item.orderItem_price > 0 || item.new_package) {
                 filter = false
             }
-            
+
             if (filter) {
                 continue
             }
@@ -104,11 +109,11 @@ export class ExportService {
                 continue
             }
 
-            
+
             var yearOrderAt = new Date(item.order_order_at).getFullYear()
             var yearMonthOrderAt = new Date(item.order_order_at).getFullYear() + '-' + (new Date(item.order_order_at).getMonth() + 1)
-            var yearMonthDayOrderAt = new Date(item.order_order_at).getFullYear() + '-' + (new Date(item.order_order_at).getMonth() + 1) + '-' +  orderAt.getDate()
-            
+            var yearMonthDayOrderAt = new Date(item.order_order_at).getFullYear() + '-' + (new Date(item.order_order_at).getMonth() + 1) + '-' + orderAt.getDate()
+
             if (!row1[yearOrderAt] || typeof row1[yearOrderAt] == 'undefined') {
                 row1[yearOrderAt] = yearOrderAt
             }
@@ -124,7 +129,7 @@ export class ExportService {
 
             var keyMap = item.customers_id + item.orderItem_product_name
             if (mapCustomerProducts[keyMap] && typeof mapCustomerProducts[keyMap] != 'undefined') {
-                let itemRow = {...mapCustomerProducts[keyMap]}
+                let itemRow = { ...mapCustomerProducts[keyMap] }
 
                 if (new Date(itemRow['order_first_at']) >= new Date(yearMonthDayOrderAt)) {
                     itemRow['order_first_at'] = yearMonthDayOrderAt
@@ -141,7 +146,7 @@ export class ExportService {
                     } else {
                         itemRow[yearMonthOrderAt] += ',' + yearMonthDayOrderAt
                     }
-                    
+
                 }
 
                 if (item.orderItem_price > 0 || item.new_package) {
@@ -159,10 +164,10 @@ export class ExportService {
                         itemRow[yearOrderAt] = String(Number(itemRow[yearOrderAt]) + Number(item.orderItem_quantity))
                     }
                 }
-                
+
                 mapCustomerProducts[keyMap] = itemRow
             } else {
-                var itemRow = {...newRow1}
+                var itemRow = { ...newRow1 }
                 let timeMonthOrderAt = ''
                 let byDate = ''
                 let quantity_using = 0
@@ -174,11 +179,11 @@ export class ExportService {
                 }
                 if (item.orderItem_price > 0) {
                     byDate = yearMonthDayOrderAt
-                    quantity += item.orderItem_quantity 
+                    quantity += item.orderItem_quantity
                     itemRow['order_code'] = item.order_order_code
                 }
-                
-            
+
+
                 itemRow['customer_name'] = item.customers_full_name
                 itemRow['customer_mobile'] = item.customers_mobile
                 itemRow['product_name'] = item.orderItem_product_name
@@ -186,10 +191,10 @@ export class ExportService {
                 itemRow['by_date'] = byDate
                 itemRow['quantity'] = String(quantity)
                 itemRow['quantity_using'] = String(quantity_using)
-                itemRow['total_price'] = String(item.orderItem_price * quantity  - item.orderItem_discount)
+                itemRow['total_price'] = String(item.orderItem_price * quantity - item.orderItem_discount)
                 itemRow[yearOrderAt] = String(item.orderItem_quantity)
                 itemRow[yearMonthOrderAt] = timeMonthOrderAt
-                
+
                 mapCustomerProducts[keyMap] = itemRow
             }
         }
@@ -202,16 +207,14 @@ export class ExportService {
         })
 
         Object.entries(mapCustomerProducts).map(x => {
-            let newRow = {...newRow1,...Object(x[1])}
+            let newRow = { ...newRow1, ...Object(x[1]) }
             rows.push(Object.values(newRow))
         })
         mapCustomerProducts = {}
-       
+
         var urlS3 = await this.uploadFile(rows, "chi_tiet_khach_hang_su_dung_dich_vu_bhvv")
         return urlS3
     }
-
-
     async uploadFile(row, name) {
         var fs = require('fs');
         var dir = './public';
@@ -237,7 +240,6 @@ export class ExportService {
         }
         return urlS3
     }
-
     async uploadFileS3(file, name) {
         try {
             var fs = require('fs');
@@ -245,28 +247,27 @@ export class ExportService {
             let s3 = new AWS.S3
                 ({
                     accessKeyId: process.env.REACT_APP_CCCESS_KEY_ID,
-                    secretAccessKey:  process.env.REACT_APP_SECRET_ACCESS_KEY,
+                    secretAccessKey: process.env.REACT_APP_SECRET_ACCESS_KEY,
                     region: 'hn',
                     endpoint: process.env.REACT_APP_ENDPOINT,
                 });
 
-            
             await fs.readFile(file, (err, data) => {
                 if (err) throw err;
                 this.dataFile = data
-                const params = 
+                const params =
                 {
                     Bucket: "cent-beauty",
                     Key: String(name),
                     Body: data,
-                    ACL: "public-read" 
+                    ACL: "public-read"
                 };
-                s3.upload(params, function(s3Err, data) {
+                s3.upload(params, function (s3Err, data) {
                     if (s3Err) throw s3Err
                 });
-             });
-             await new Promise(r => setTimeout(r, 1500));
-                var urlS3 = process.env.REACT_APP_S3_URL + name
+            });
+            await new Promise(r => setTimeout(r, 1500));
+            var urlS3 = process.env.REACT_APP_S3_URL + name
             return urlS3
         } catch (e) {
             console.log(e)
@@ -279,7 +280,7 @@ export class ExportService {
         console.log(content);
     }
 
-    async exportPackageDetail() { 
+    async exportPackageDetail() {
         var start = new Date('2022-10-01')
         var end = new Date('2022-12-24')
         end.setDate(end.getDate() + 1);
@@ -289,14 +290,14 @@ export class ExportService {
             // .andWhere('order.money_owed > 0')
             .leftJoinAndSelect("order_item.order", "order")
             .andWhere(
-                    'order.order_at BETWEEN :start_at AND :end_at',
-                    { start_at: startOfDay(start), end_at: endOfDay(end) })
+                'order.order_at BETWEEN :start_at AND :end_at',
+                { start_at: startOfDay(start), end_at: endOfDay(end) })
             .getRawMany()
 
 
         var orderCodes = []
         var dataOrderItemNew = {}
-        for(let item of orderItems) {
+        for (let item of orderItems) {
             if (item.order_item_package_code) {
                 orderCodes.push(item.order_order_code)
                 dataOrderItemNew[item.order_order_code] = item
@@ -306,49 +307,49 @@ export class ExportService {
         // return dataOrderItemNew
         var packages = await this.packageRepo.createQueryBuilder('package')
             .where("package.soft_delete IS NULL")
-            .andWhere('package.order_code IN (:...order_code)', {order_code: orderCodes})
+            .andWhere('package.order_code IN (:...order_code)', { order_code: orderCodes })
             .andWhere("package.status = 1")
             .andWhere('customer.soft_delete IS NULL')
             .leftJoinAndSelect('package.customer', 'customer')
             .orderBy('customer.id', 'DESC')
             .getRawMany()
-        
+
         var rowPackage = {}
         var i = 1
         var packageCodes = []
-        for(let item of packages) {
-            let defaultRow = {...constant.exportPackageDetail}
+        for (let item of packages) {
+            let defaultRow = { ...constant.exportPackageDetail }
             defaultRow.stt = String(i)
             defaultRow.customer_name = item.customer_full_name
             defaultRow.customer_mobile = item.customer_mobile ? item.customer_mobile : item.package_customer_mobile
             defaultRow.package_date = item.package_created_at
-            defaultRow.package_code =  item.package_package_code
+            defaultRow.package_code = item.package_package_code
             defaultRow.package_name = item.package_product_name
             defaultRow.order_code = item.package_order_code
             defaultRow.total_bill = String(dataOrderItemNew[item.package_order_code].order_total_price)
             defaultRow.paid_mony = String(dataOrderItemNew[item.package_order_code].order_total_price - dataOrderItemNew[item.package_order_code].order_money_owed)
             defaultRow.owed_mony = String(Number(dataOrderItemNew[item.package_order_code].order_money_owed)),
-            defaultRow.max_use = item.package_max_used > 100 ? "Vĩnh viễn" : String(item.package_max_used)
+                defaultRow.max_use = item.package_max_used > 100 ? "Vĩnh viễn" : String(item.package_max_used)
             defaultRow.use_mony = ' '
             defaultRow.count_use = String(item.package_count_used)
             defaultRow.residual_use = item.package_max_used > 100 ? "Vĩnh viễn" : String(item.package_max_used - item.package_count_used)
             rowPackage[item.package_package_code] = defaultRow
-            i ++
+            i++
             packageCodes.push(item.package_package_code)
         }
 
         var orderItemFindPackage = await this.orderItemRepo.createQueryBuilder('order_item')
             .where('order.soft_delete IS NULL')
             .andWhere('order.status = 3')
-            .andWhere('order_item.package_code IN (:...package_code)', {package_code: packageCodes})
+            .andWhere('order_item.package_code IN (:...package_code)', { package_code: packageCodes })
             .leftJoinAndSelect("order_item.order", "order")
             .getRawMany()
 
         var countUsing = {}
 
-        var rowOne = {...constant.exportPackageDetail}
-        for(let item of orderItemFindPackage) {
-            if(rowPackage[item.order_item_package_code] && typeof rowPackage[item.order_item_package_code] != "undefined") {
+        var rowOne = { ...constant.exportPackageDetail }
+        for (let item of orderItemFindPackage) {
+            if (rowPackage[item.order_item_package_code] && typeof rowPackage[item.order_item_package_code] != "undefined") {
                 if (item.order_item_package_code && item.order_item_price == 0 && !item.order_item_new_package) {
 
                     if (typeof countUsing[item.order_item_package_code] == "undefined") {
@@ -362,12 +363,12 @@ export class ExportService {
 
                     // console.log(item.order_order_code, item.order_order_at, 2)
                 }
-                
+
             }
         }
 
         var rowPackageCheck = {}
-    
+
         let rows = []
         rows.push(Object.values(rowOne))
         let newRow1 = {}
@@ -378,12 +379,89 @@ export class ExportService {
         Object.entries(rowPackage).map(x => {
             console.log(x[1]['count_use'], countUsing[x[0]])
             if (typeof countUsing[x[0]] != "undefined" && x[1]['count_use'] != countUsing[x[0]]) {
-                let newRow = {...newRow1,...Object(x[1])}
+                let newRow = { ...newRow1, ...Object(x[1]) }
                 rows.push(Object.values(newRow))
             }
         })
-        
+
         var urlS3 = await this.uploadFile(rows, "khach_hang_su_dung_the_xai_het_tien")
         return urlS3
+    }
+
+    async exportBill(startDate: string, endDate: string, limit, page) {
+        try {
+            const start = moment(new Date(startDate)).startOf("day").format("YYYY-MM-DD HH:mm:ss")
+            const end = moment(new Date(endDate)).endOf("day").format("YYYY-MM-DD HH:mm:ss")
+            const options = {
+                limit: parseInt(limit) || 1000,
+                page: parseInt(page) || 1
+            }
+            const data = await paginate(this.orderRepo, options, {
+                select: {
+                    id: true,
+                    order_code: true,
+                    status: true,
+                    order_at: true,
+                    total_price: true,
+                    payment_type: true,
+                    discount_by_rule: true,
+                    discount_by_total_bill: true,
+                    source_from: true,
+                    staff_booking: true,
+                    created_name: true,
+                    sale_rule_applied_ids: true,
+                    description: true,
+                    deposit_total: true,
+                    isDeposit: true,
+                    stores: {
+                        id: true,
+                        name_store: true
+                    },
+                    customer: {
+                        id: true,
+                        full_name: true,
+                        mobile: true
+                    },
+                    orderItem: {
+                        id: true,
+                        product_name: true
+                    }
+                },
+                where: {
+                    status: 3,
+                    order_at: Between(
+                        new Date(start),
+                        new Date(end)
+                    ),
+                },
+                relations: {
+                    orderItem: true,
+                    customer: true,
+                    stores: true
+                },
+                order: {
+                    order_at: "DESC"
+                }
+            })
+
+            const newData = data.items.map(x => {
+                const z = {
+                    ...x,
+                    items: x.orderItem.map(y => y.product_name).toString(),
+                    customer_name: x.customer?.full_name || "",
+                    store: x.stores.name_store
+                }
+                delete z.orderItem
+                delete z.stores
+                delete z.customer
+                return z
+            })
+
+            const res = await addRowSheet(newData)
+            return helper.success({ meta : data.meta })
+        } catch (error) {
+            console.error(error)
+            return helper.error(error)
+        }
     }
 }
