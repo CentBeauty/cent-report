@@ -15,7 +15,7 @@ async function addRowSheet(data:any) {
     try {
         const doc = await connectGoogleSheet()
         await doc.loadInfo();
-        const sheet = doc.sheetsByIndex[0];
+        const sheet = doc.sheetsByIndex[1];
         await sheet.addRows(data);
         return true
     } catch (error) {

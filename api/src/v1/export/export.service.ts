@@ -392,73 +392,80 @@ export class ExportService {
         try {
             const start = moment(new Date(startDate)).startOf("day").format("YYYY-MM-DD HH:mm:ss")
             const end = moment(new Date(endDate)).endOf("day").format("YYYY-MM-DD HH:mm:ss")
+
+
             const options = {
                 limit: parseInt(limit) || 1000,
                 page: parseInt(page) || 1
             }
-            const data = await paginate(this.orderRepo, options, {
-                select: {
-                    id: true,
-                    order_code: true,
-                    status: true,
-                    order_at: true,
-                    total_price: true,
-                    payment_type: true,
-                    discount_by_rule: true,
-                    discount_by_total_bill: true,
-                    source_from: true,
-                    staff_booking: true,
-                    created_name: true,
-                    sale_rule_applied_ids: true,
-                    description: true,
-                    deposit_total: true,
-                    isDeposit: true,
-                    stores: {
-                        id: true,
-                        name_store: true
-                    },
-                    customer: {
-                        id: true,
-                        full_name: true,
-                        mobile: true
-                    },
-                    orderItem: {
-                        id: true,
-                        product_name: true
+            const data = await paginate(this.orderItemRepo, options, {
+                select:{
+                    id:true,
+                    product_name:true,
+                    discount:true,
+                    price:true,
+                    order:{
+                        id:true,
+                        order_at:true,
+                        status:true,
+                        staff_booking:true,
+                        source_from:true,
+                        description:true,
+                        isDeposit:true,
+                        order_code:true,
+                        sale_rule_applied_ids:true,
+                        payment_type:true,
+                        created_name:true,
+                        customer:{
+                            full_name:true,
+                            id:true,
+                            mobile:true
+                        },
+                        stores:{
+                            id:true,
+                            name_store:true
+                        }
                     }
                 },
                 where: {
-                    status: 3,
-                    order_at: Between(
-                        new Date(start),
-                        new Date(end)
-                    ),
+                    order: {
+                        order_at: Between(
+                            new Date(start),
+                            new Date(end)
+                        ),
+                        status:3
+                    }
                 },
-                relations: {
-                    orderItem: true,
-                    customer: true,
-                    stores: true
+                relations:{
+                    order:{
+                        customer:true,
+                        stores:true
+                    }
                 },
-                order: {
-                    order_at: "DESC"
+                order:{
+                    order:{
+                        order_at:"desc"
+                    }
                 }
             })
-
-            const newData = data.items.map(x => {
-                const z = {
+            const newData = data.items.map(x=>{
+                const y = {
                     ...x,
-                    items: x.orderItem.map(y => y.product_name).toString(),
-                    customer_name: x.customer?.full_name || "",
-                    store: x.stores.name_store
+                    ...x.order,
+                    customer_name:x.order.customer?.full_name || "",
+                    customer_phone:x.order.customer?.mobile || "",
+                    store: x.order.stores.name_store,
+                    final_price: x.price - x.discount
                 }
-                delete z.orderItem
-                delete z.stores
-                delete z.customer
-                return z
-            })
+                delete y.id
+                delete y.order
+                delete y.customer
+                delete y.stores
 
+                return y
+            })
             const res = await addRowSheet(newData)
-            return helper.success({ meta : data.meta })
+            return helper.success({meta:data.meta,res})
         } catch (error) {
             console.error(error)
             return helper.error(error)
