@@ -13,7 +13,6 @@ export default function MobileMenu() {
     const location = useLocation();
     const params = useParams();
     const path = getRoutePath(location, params);
-    console.log("path",path)
     const tabs = [
         {
             key: linkEnum.HOME_PAGE,

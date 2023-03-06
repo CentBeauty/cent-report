@@ -112,11 +112,11 @@ export default function Discount() {
         },
         {
             title: 'Mã giảm giá',
-            dataIndex: 'sumPerBills',
-            key: "sumPerBills",
+            dataIndex: 'sale_rule_applied_ids',
+            key: "sale_rule_applied_ids",
             width: '10%',
             render: (x, record) => {
-                return <p></p>
+                return <p>{x}</p>
             },
             showOnResponse: true,
             showOnDesktop: true

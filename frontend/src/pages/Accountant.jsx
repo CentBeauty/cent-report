@@ -21,12 +21,13 @@ export default function AccountantPage() {
     const [keyTab, setKey] = useState(parseInt(searchParams.get('key')) || 1)
 
     const onChange = (key) => {
+        setKey(parseInt(key))
         navigate({
             pathname: linkEnum.ACCOUNTANT_PAGE,
             search: `?key=${key}`,
         });
-        setKey(key)
     };
+
     const items = [
         {
             key: 1,
@@ -80,20 +81,22 @@ export default function AccountantPage() {
         },
         {
             key: 11,
-            label: `Dso trong tháng Nhóm dịch vụ`,
+            label: `Doanh số trong tháng Nhóm dịch vụ`,
             children: <ReceiptCate />,
         },
     ];
+    
     useEffect(() => {
         document.title = "Accountant report page"
     }, [])
+
     return (
 
         <Container fluid className='box-container p-2 m-2'>
             <Row>
                 <Col xs={12}>
                     <div>
-                        <Tabs defaultActiveKey={keyTab}  items={items} onChange={onChange} />
+                        <Tabs activeKey={keyTab}  items={items} onChange={onChange} />
                     </div>
                 </Col>
             </Row>

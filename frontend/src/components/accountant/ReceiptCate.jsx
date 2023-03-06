@@ -36,7 +36,7 @@ export default function ReceiptCate(){
         <Spin tip="Xin vui lòng chờ. Dữ liệu nhiều có thể sẽ mất nhiều thời gian" size="large" spinning={isLoading}>
         <div className="mt-2">
             <Descriptions
-                title="Bảng tổng hợp về khách hàng"
+                title="Doanh số trong tháng Nhóm dịch vụ"
                 bordered
                 column={{
                     xxl: 3,

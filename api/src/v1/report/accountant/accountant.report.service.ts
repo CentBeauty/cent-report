@@ -115,6 +115,7 @@ export class AccountantReportsService {
                 let sumMoney = _.sumBy(items, function (o) { return o.total_price })
                 const itemsNew = items.map(x => {
                     return {
+                        key:x.id,
                         ...x,
                         order: {
                             ...x
@@ -189,8 +190,9 @@ export class AccountantReportsService {
             })
 
             const { items } = data
-            const newItem = items.map(x => {
+            const newItem = items.map((x,i) => {
                 return {
+                    key:`key-${i}`,
                     ...x,
                     package: {
                         name: x.product_name,
@@ -285,11 +287,13 @@ export class AccountantReportsService {
                 },
                 cache: true,
             })
+            
             const { items } = data
 
             const newItem = items.map(x => {
                 let newObject: LooseObject = {
                     ...x,
+                    key:x.id,
                     price: {
                         initial: x.sale_card,
                         sale: x.rule_price
@@ -373,6 +377,7 @@ export class AccountantReportsService {
                 let sumMoney2 = _.sumBy(x.order, function (o) { return o.total_price })
                 return {
                     ...x,
+                    key:x.id,
                     billNumber: x.order.length,
                     sumMoney,
                     sumPerBills: sumMoney2 / x.order.length || 0,
@@ -408,6 +413,7 @@ export class AccountantReportsService {
                         order_at: true,
                         order_code: true,
                         created_name: true,
+                        sale_rule_applied_ids:true,
                         source_from: true,
                         customer: {
                             id: true,
@@ -440,6 +446,7 @@ export class AccountantReportsService {
             let { items } = data
             let itemsNew = items.map(x => {
                 const newObject = {
+                    key:x.id,
                     ...x,
                     ...x.order
                 }
@@ -503,6 +510,7 @@ export class AccountantReportsService {
             let itemsNew = items.map(x => {
                 const newObject = {
                     ...x,
+                    key:x.id,
                     ...x.order,
                     priceFinal: x.price - x.discount
                 }
@@ -578,6 +586,7 @@ export class AccountantReportsService {
                     const filter = items.filter(x => x.employee_service1 != null).map(x => {
                         return {
                             ...x,
+                            key:x.id,
                             name: x.employee_service1
                         }
                     })
@@ -587,6 +596,7 @@ export class AccountantReportsService {
                     const filter = items.filter(x => x.employee_service2 != null).map(x => {
                         return {
                             ...x,
+                            key:x.id,
                             name: x.employee_service2
                         }
                     })

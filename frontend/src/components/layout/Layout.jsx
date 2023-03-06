@@ -81,6 +81,9 @@ export default function LayoutComponent({ children }) {
           }}
           className="pt-3 px-5 box"
         >
+          <div>
+            
+          </div>
           <div className='d-flex justify-content-end w-100 mx-0'>
             <Dropdown
               menu={{
@@ -88,7 +91,7 @@ export default function LayoutComponent({ children }) {
               }}
               placement="bottom"
               arrow
-              style={{width:"300px"}}
+              style={{ width: "300px" }}
             >
               <Avatar size="large" className="shadow-avatar" icon={<UserOutlined />} src={user.data.avatar_url ? user.data.avatar_url : "https://joesch.moe/api/v1/random"} />
             </Dropdown>
