@@ -8,7 +8,7 @@ dotenv.config();
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   /* Cors */
-  let whitelist = ['http://localhost:3001',"http://192.168.110.207:3001","http://194.233.70.59:3000","http://194.233.70.59:8080"];
+  let whitelist = ['http://localhost:3001',"http://192.168.110.207:3001","http://194.233.70.59:3000","http://194.233.70.59:8082"];
   app.enableCors({
     origin: function (origin, callback) {
       if (!origin || whitelist.indexOf(origin) !== -1) {
