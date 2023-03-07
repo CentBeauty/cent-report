@@ -461,7 +461,6 @@ export class ExportService {
                 delete y.order
                 delete y.customer
                 delete y.stores
-
                 return y
             })
             const res = await addRowSheet(newData)

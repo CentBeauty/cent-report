@@ -1,8 +1,8 @@
 
-import { Pagination, Input, Select, Button, message, Spin, Tooltip } from 'antd';
+import { Pagination, Input, Select, Button, message, Spin, Tooltip, Drawer } from 'antd';
 import { useEffect, useState } from 'react';
 import { Row, Col } from "react-bootstrap"
-import { SearchOutlined, CloseOutlined, ProfileOutlined, MobileOutlined, MailOutlined } from '@ant-design/icons';
+import { SearchOutlined, CloseOutlined, ProfileOutlined, MobileOutlined, MailOutlined, FilterOutlined } from '@ant-design/icons';
 import axiosService from '../../utils/axios.config';
 import currencyConvert from '../../utils/currency';
 import moment from 'moment'
@@ -21,11 +21,18 @@ export default function Owed() {
     const [sort, setSort] = useState("date_desc")
     const [sumOwed, setSumOwed] = useState(0)
     const [sum, setSum] = useState(0)
+    const [open, setOpen] = useState(false);
+    const showDrawer = () => {
+        setOpen(true);
+    };
+    const onClose = () => {
+        setOpen(false);
+    };
     const columns = [
         {
             title: 'STT',
             dataIndex: 'id',
-            key:"id",
+            key: "id",
             width: '10%',
             render: (y, record) => {
                 const findIndex = data.findIndex(x => {
@@ -39,7 +46,7 @@ export default function Owed() {
         {
             title: 'Khách hàng',
             dataIndex: 'customers',
-            key:"customers",
+            key: "customers",
             width: '30%',
             render: (x, record) => {
                 return (
@@ -56,8 +63,8 @@ export default function Owed() {
         {
             title: 'Đơn hàng',
             width: '30%',
-            dataIndex:"order",
-            key:"order",
+            dataIndex: "order",
+            key: "order",
             render: (x, record) => {
                 return (
                     <>
@@ -78,7 +85,7 @@ export default function Owed() {
         {
             title: 'Số tiền nợ',
             dataIndex: 'money_owed',
-            key:"money_owed",
+            key: "money_owed",
             with: "5%",
             sorter: (a, b) => a.money_owed - b.money_owed,
             render: (x, record) => {
@@ -95,7 +102,7 @@ export default function Owed() {
         {
             title: 'Thời gian nợ',
             dataIndex: 'order_at',
-            key:"order_at",
+            key: "order_at",
             width: '10%',
             render: (x, record) => {
                 const date1 = new Date(x);
@@ -104,14 +111,14 @@ export default function Owed() {
                 const { days, months, years } = result
                 return (
                     <>
-                    {
-                        days === 0 ? <p>
-                            1 ngày
-                        </p>
-                        :
-                        <p>{`${years > 0 ? `${years} năm ` : ""} ${months > 0 ? `${months} tháng ` : ""} ${days > 0 ? `${days} ngày` : ""} `}</p>
+                        {
+                            days === 0 ? <p>
+                                1 ngày
+                            </p>
+                                :
+                                <p>{`${years > 0 ? `${years} năm ` : ""} ${months > 0 ? `${months} tháng ` : ""} ${days > 0 ? `${days} ngày` : ""} `}</p>
 
-                    }
+                        }
                     </>
                 )
             },
@@ -158,6 +165,7 @@ export default function Owed() {
                 setSum(sumMoney || 0)
                 setSumOwed(sumMoneyOwed || 0)
                 setIsLoading(false)
+                onClose()
             } else {
                 console.log(res)
                 message.error(res.data.message)
@@ -179,83 +187,88 @@ export default function Owed() {
     }
     return (
         <Spin tip="Đang tải. Xin vui lòng chờ" size="large" spinning={isLoading}>
-            <Row>
-                <Col xxl={3} xs={6}>
-                    <span>Số điện thoại:</span>
-                    <Input onChange={onChangePhone} placeholder="Nhập số điện thoại khách hàng" value={phone} />
+            <Drawer title="Tìm kiếm" placement="right" onClose={onClose} open={open}>
+                <Row>
+                    <Col xxl={12} xs={12}>
+                        <span>Số điện thoại:</span>
+                        <Input onChange={onChangePhone} placeholder="Nhập số điện thoại khách hàng" value={phone} />
+                    </Col>
+                    <Col xxl={12} xs={12} className="mt-2">
+                        <span>Mã hoá đơn:</span>
+                        <Input onChange={onChangeOrder} placeholder="Nhập mã hoá đơn" value={order} />
+                    </Col>
+                    <Col xxl={12} xs={12} className="mt-2">
+                        <span>Thời gian nợ:</span>
+                        <br></br>
+                        <Select
+                            value={range}
+                            className='w-100'
+                            onChange={onChangeSelect}
+                            options={[
+                                {
+                                    label: 'Tất cả',
+                                    value: '',
+                                },
+                                {
+                                    label: '1 tháng',
+                                    value: '1',
+                                },
+                                {
+                                    label: '3 Tháng',
+                                    value: '3',
+                                },
+                                {
+                                    label: '6 tháng',
+                                    value: '6',
+                                },
+                                {
+                                    label: '9 tháng',
+                                    value: '9',
+                                },
+                                {
+                                    label: '12 tháng',
+                                    value: '12',
+                                },
+                            ]}
+                        />
+                    </Col>
+                    <Col xxl={12} xs={12} className="mt-2">
+                        <span>Sắp xếp theo:</span>
+                        <br></br>
+                        <Select
+                            value={sort}
+                            className='w-100'
+                            onChange={onChangeSort}
+                            options={[
+                                {
+                                    label: 'Thời gian tạo gần nhất',
+                                    value: 'date_desc',
+                                },
+                                {
+                                    label: 'Thời gian tạo xa nhất',
+                                    value: 'date_asc',
+                                },
+                            ]}
+                        />
+                    </Col>
+                    <Col xxl={12} xs={12} className="mt-2">
+                        <div className='d-flex'>
+                            <Button type="primary" className='me-2 w-100' icon={<SearchOutlined />} onClick={handleFilter}>
+                                Tìm kiếm
+                            </Button>
+                            <Button onClick={clearFilter} className="w-100" type="primary" danger icon={<CloseOutlined />}>
+                                Xoá
+                            </Button>
+                        </div>
+                    </Col>
+                </Row>
+            </Drawer>
+            <Row className='mt-1'>
+                <Col xs={12}>
+                    <Button type="primary" className='ms-2' onClick={showDrawer} >
+                        <FilterOutlined />
+                    </Button>
                 </Col>
-                <Col xxl={3} xs={6}>
-                    <span>Mã hoá đơn:</span>
-                    <Input onChange={onChangeOrder} placeholder="Nhập mã hoá đơn" value={order} />
-                </Col>
-                <Col xxl={2} xs={6}>
-                    <span>Thời gian nợ:</span>
-                    <br></br>
-                    <Select
-                        value={range}
-                        className='w-100'
-                        onChange={onChangeSelect}
-                        options={[
-                            {
-                                label: 'Tất cả',
-                                value: '',
-                            },
-                            {
-                                label: '1 tháng',
-                                value: '1',
-                            },
-                            {
-                                label: '3 Tháng',
-                                value: '3',
-                            },
-                            {
-                                label: '6 tháng',
-                                value: '6',
-                            },
-                            {
-                                label: '9 tháng',
-                                value: '9',
-                            },
-                            {
-                                label: '12 tháng',
-                                value: '12',
-                            },
-                        ]}
-                    />
-                </Col>
-                <Col xxl={2} xs={6}>
-                    <span>Sắp xếp theo:</span>
-                    <br></br>
-                    <Select
-                        value={sort}
-                        className='w-100'
-                        onChange={onChangeSort}
-                        options={[
-                            {
-                                label: 'Thời gian tạo gần nhất',
-                                value: 'date_desc',
-                            },
-                            {
-                                label: 'Thời gian tạo xa nhất',
-                                value: 'date_asc',
-                            },
-                        ]}
-                    />
-                </Col>
-                <Col xxl={2} xs={6}>
-                    <span></span>
-                    <br></br>
-                    <div className='d-flex'>
-                        <Button type="primary" className='mx-4' icon={<SearchOutlined />} onClick={handleFilter}>
-                            Tìm kiếm
-                        </Button>
-                        <Button onClick={clearFilter} type="primary" danger icon={<CloseOutlined />}>
-                            Xoá
-                        </Button>
-                    </div>
-                </Col>
-            </Row>
-            <Row className='mt-5'>
                 <Col xs={12} className="d-flex justify-content-end px-4">
                     <p>Hiển thị <span className='text-success fw-bold'>{data.length}</span> trên <span className='text-warning fw-bold'>{total}</span>.
                         Tổng số tiền nợ: <span className='text-danger'>{currencyConvert(sumOwed)}</span> .Tổng số: <span className='text-primary'>{currencyConvert(sum)}</span>

@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react"
-import { Spin, Pagination, Input, Select, Button, message, DatePicker } from "antd"
+import { Spin, Pagination, Drawer, Select, Button, message, DatePicker } from "antd"
 import { Row, Col } from "react-bootstrap"
 import Table from "ant-responsive-table";
 import axiosService from "../../utils/axios.config";
-import { SearchOutlined, CloseOutlined, ProfileOutlined, MobileOutlined } from '@ant-design/icons';
+import { SearchOutlined, CloseOutlined, FilterOutlined } from '@ant-design/icons';
 import moment from 'moment'
 import currencyConvert from '../../utils/currency';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 dayjs.extend(customParseFormat);
-const dateFormat = 'YYYY-mm-DD';
 const { RangePicker } = DatePicker;
 export default function CustomerPaid() {
     const [isLoading, setIsLoading] = useState(false)
@@ -20,6 +19,13 @@ export default function CustomerPaid() {
     const [sortBy, setSortBy] = useState("date_desc")
     const [startDate, setStartDate] = useState(dayjs().add(-7, 'd').format('YYYY-MM-DD'))
     const [endDate, setEndDate] = useState(dayjs().format('YYYY-MM-DD'))
+    const [open, setOpen] = useState(false);
+    const showDrawer = () => {
+        setOpen(true);
+    };
+    const onClose = () => {
+        setOpen(false);
+    };
     const columns = [
         {
             title: 'STT',
@@ -166,7 +172,7 @@ export default function CustomerPaid() {
             showOnDesktop: true
         },
     ];
-    const getData = async (limitFetch = 20, pageFetch = 1, sort = "date_desc",start="",end="") => {
+    const getData = async (limitFetch = 20, pageFetch = 1, sort = "date_desc", start = "", end = "") => {
         setIsLoading(true)
         try {
             const res = await axiosService(`reports/accountant/customer-paid?page=${pageFetch}&limit=${limitFetch}&startDate=${start}&endDate=${end}&sortBy=${sort}`)
@@ -175,6 +181,7 @@ export default function CustomerPaid() {
                 setData([...items])
                 setTotal(meta.totalItems)
                 setIsLoading(false)
+                onClose()
             } else {
                 console.log(res)
                 message.error(res.data.message)
@@ -186,19 +193,19 @@ export default function CustomerPaid() {
         }
     }
     const onChangePagination = async (page, pageSize) => {
-        await getData(pageSize, page,sortBy,startDate,endDate)
+        await getData(pageSize, page, sortBy, startDate, endDate)
         setPage(page)
         setLimit(pageSize)
         window.scrollTo(0, 0)
     }
     useEffect(() => {
         async function fetchData() {
-            await getData(limit,page,sortBy,startDate,endDate)
+            await getData(limit, page, sortBy, startDate, endDate)
         }
         fetchData()
     }, [])
     const handleFilter = async () => {
-        await getData(limit, page, sortBy,startDate,endDate)
+        await getData(limit, page, sortBy, startDate, endDate)
     }
     const clearFilter = async () => {
         setLimit(20)
@@ -206,7 +213,7 @@ export default function CustomerPaid() {
         setSortBy("date_desc")
         setEndDate(dayjs().format('YYYY-MM-DD'))
         setStartDate(dayjs().add(-7, 'd').format('YYYY-MM-DD'))
-        await getData(20, 1, "date_desc",dayjs().add(-7, 'd').format('YYYY-MM-DD'),dayjs().format('YYYY-MM-DD'))
+        await getData(20, 1, "date_desc", dayjs().add(-7, 'd').format('YYYY-MM-DD'), dayjs().format('YYYY-MM-DD'))
     }
     const onChangeSelectSortBy = (value) => {
         setSortBy(value)
@@ -217,65 +224,72 @@ export default function CustomerPaid() {
     }
     const rangePresets = [
         {
-          label: 'Last 7 Days',
-          value: [dayjs().add(-7, 'd'), dayjs()],
+            label: 'Last 7 Days',
+            value: [dayjs().add(-7, 'd'), dayjs()],
         },
         {
-          label: 'Last 14 Days',
-          value: [dayjs().add(-14, 'd'), dayjs()],
+            label: 'Last 14 Days',
+            value: [dayjs().add(-14, 'd'), dayjs()],
         },
         {
-          label: 'Last 30 Days',
-          value: [dayjs().add(-30, 'd'), dayjs()],
+            label: 'Last 30 Days',
+            value: [dayjs().add(-30, 'd'), dayjs()],
         },
         {
-          label: 'Last 90 Days',
-          value: [dayjs().add(-90, 'd'), dayjs()],
+            label: 'Last 90 Days',
+            value: [dayjs().add(-90, 'd'), dayjs()],
         },
-      ];
+    ];
     return (
         <Spin tip="Đang tải. Xin vui lòng chờ" size="large" spinning={isLoading}>
-            <Row>
-                <Col xxl={4} xs={6} >
-                    <span>Khoảng thời gian:</span>
-                    <br></br>
-                    <RangePicker presets={rangePresets} className="w-100" onChange={onChangeDate}
-                        defaultValue={[dayjs().add(-7, 'd'), dayjs()]}
-                    />
+            <Drawer title="Tìm kiếm" placement="right" onClose={onClose} open={open}>
+                <Row>
+                    <Col xxl={12} xs={12} >
+                        <span>Khoảng thời gian:</span>
+                        <br></br>
+                        <RangePicker presets={rangePresets} className="w-100" onChange={onChangeDate}
+                            defaultValue={[dayjs().add(-7, 'd'), dayjs()]}
+                        />
+                    </Col>
+                    <Col xxl={12} xs={12} className="mt-2">
+                        <span>Sắp xếp theo:</span>
+                        <br></br>
+                        <Select
+                            value={sortBy}
+                            className='w-100'
+                            onChange={onChangeSelectSortBy}
+                            options={[
+                                {
+                                    label: "Thời gian tạo gần nhất",
+                                    value: "date_desc"
+                                },
+                                {
+                                    label: 'Thời gian tạo xa nhất',
+                                    value: 'date_asc',
+                                },
+                            ]}
+                        />
+                    </Col>
+                    <Col xxl={12} xs={12} className="mt-2">
+                        <span></span>
+                        <br></br>
+                        <div className='d-flex'>
+                            <Button type="primary" className='me-2 w-100' icon={<SearchOutlined />} onClick={handleFilter}>
+                                Tìm kiếm
+                            </Button>
+                            <Button onClick={clearFilter} type="primary" className="w-100" danger icon={<CloseOutlined />}>
+                                Xoá
+                            </Button>
+                        </div>
+                    </Col>
+                </Row>
+            </Drawer>
+            <Row className='mt-1'>
+                <Col xs={12}>
+                    <Button type="primary" className='ms-2' onClick={showDrawer} >
+                        <FilterOutlined />
+                    </Button>
                 </Col>
-                <Col xxl={4} xs={6}>
-                    <span>Sắp xếp theo:</span>
-                    <br></br>
-                    <Select
-                        value={sortBy}
-                        className='w-100'
-                        onChange={onChangeSelectSortBy}
-                        options={[
-                            {
-                                label: "Thời gian tạo gần nhất",
-                                value: "date_desc"
-                            },
-                            {
-                                label: 'Thời gian tạo xa nhất',
-                                value: 'date_asc',
-                            },
-                        ]}
-                    />
-                </Col>
-                <Col xxl={4} xs={12} >
-                    <span></span>
-                    <br></br>
-                    <div className='d-flex'>
-                        <Button type="primary" className='mx-2' icon={<SearchOutlined />} onClick={handleFilter}>
-                            Tìm kiếm
-                        </Button>
-                        <Button onClick={clearFilter} type="primary" danger icon={<CloseOutlined />}>
-                            Xoá
-                        </Button>
-                    </div>
-                </Col>
-            </Row>
-            <Row className='mt-5'>
                 <Col xs={12} className="d-flex justify-content-end px-4">
                     <p>Hiển thị <span className='text-success fw-bold'>{data.length}</span> trên <span className='text-warning fw-bold'>{total}</span>
                         {/* Tổng số tiền nợ: <span className='text-danger'>{currencyConvert(sumOwed)}</span> .Tổng số: <span className='text-primary'>{currencyConvert(sum)}</span> */}

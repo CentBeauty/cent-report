@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react"
-import { Spin, DatePicker, Button, message, Descriptions } from "antd"
+import { Spin, DatePicker, Button, message, Descriptions, Drawer } from "antd"
 import { Row, Col } from "react-bootstrap"
-import Table from "ant-responsive-table";
 import axiosService from "../../utils/axios.config";
-import { SearchOutlined } from '@ant-design/icons';
+import { SearchOutlined, FilterOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 dayjs.extend(customParseFormat);
@@ -19,6 +18,13 @@ export default function Customer() {
     })
     const [startDate, setStartDate] = useState(dayjs().add(-7, 'd').format('YYYY-MM-DD'))
     const [endDate, setEndDate] = useState(dayjs().format('YYYY-MM-DD'))
+    const [open, setOpen] = useState(false);
+    const showDrawer = () => {
+        setOpen(true);
+    };
+    const onClose = () => {
+        setOpen(false);
+    };
     const rangePresets = [
         {
             label: 'Last 7 Days',
@@ -44,6 +50,7 @@ export default function Customer() {
             if (res.data.code === 200) {
                 setData(res.data.data)
                 setIsLoading(false)
+                onClose()
             } else {
                 console.log(res)
                 message.error(res.data.message)
@@ -69,22 +76,31 @@ export default function Customer() {
     }, [])
     return (
         <Spin tip="Xin vui lòng chờ. Dữ liệu nhiều có thể sẽ mất nhiều thời gian" size="large" spinning={isLoading}>
-            <Row>
-                <Col xxl={6} xs={6} >
-                    <span>Khoảng thời gian:</span>
-                    <br></br>
-                    <RangePicker presets={rangePresets} className="w-100" onChange={onChangeDate}
-                        defaultValue={[dayjs().add(-7, 'd'), dayjs()]}
-                    />
-                </Col>
-                <Col xxl={6} xs={6} >
-                    <span></span>
-                    <br></br>
-                    <div className='d-flex'>
-                        <Button type="primary" className='mx-2' icon={<SearchOutlined />} onClick={handleFilter}>
-                            Tìm kiếm
-                        </Button>
-                    </div>
+            <Drawer title="Tìm kiếm" placement="right" onClose={onClose} open={open}>
+                <Row>
+                    <Col xxl={12} xs={12} >
+                        <span>Khoảng thời gian:</span>
+                        <br></br>
+                        <RangePicker presets={rangePresets} className="w-100" onChange={onChangeDate}
+                            defaultValue={[dayjs().add(-7, 'd'), dayjs()]}
+                        />
+                    </Col>
+                    <Col xxl={12} xs={12} className="mt-3" >
+                        <span></span>
+                        <br></br>
+                        <div className='d-flex'>
+                            <Button type="primary" className='w-100' icon={<SearchOutlined />} onClick={handleFilter}>
+                                Tìm kiếm
+                            </Button>
+                        </div>
+                    </Col>
+                </Row>
+            </Drawer>
+            <Row className='mt-1'>
+                <Col xs={12}>
+                    <Button type="primary" className='ms-2' onClick={showDrawer} >
+                        <FilterOutlined />
+                    </Button>
                 </Col>
             </Row>
             <div className="mt-2">

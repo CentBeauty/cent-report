@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react"
-import { Spin, Pagination, Input, Select, Button, message, Tag } from "antd"
+import { Spin, Pagination, Select, Button, message, Drawer } from "antd"
 import { Row, Col } from "react-bootstrap"
 import Table from "ant-responsive-table";
 import axiosService from "../../utils/axios.config";
-import { SearchOutlined, CloseOutlined, ProfileOutlined, MobileOutlined } from '@ant-design/icons';
+import { SearchOutlined, CloseOutlined, FilterOutlined } from '@ant-design/icons';
 import moment from 'moment'
 import currencyConvert from '../../utils/currency';
 export default function Discount() {
@@ -12,7 +12,14 @@ export default function Discount() {
     const [total, setTotal] = useState(0)
     const [page, setPage] = useState(1)
     const [limit, setLimit] = useState(20)
-    const [sortBy,setSortBy] = useState("date_desc")
+    const [sortBy, setSortBy] = useState("date_desc")
+    const [open, setOpen] = useState(false);
+    const showDrawer = () => {
+        setOpen(true);
+    };
+    const onClose = () => {
+        setOpen(false);
+    };
     const columns = [
         {
             title: 'STT',
@@ -133,7 +140,7 @@ export default function Discount() {
             showOnDesktop: true
         },
     ];
-    const getData = async (limitFetch = 20, pageFetch = 1,sort="date_desc") => {
+    const getData = async (limitFetch = 20, pageFetch = 1, sort = "date_desc") => {
         setIsLoading(true)
         try {
             const res = await axiosService(`reports/accountant/discount?page=${pageFetch}&limit=${limitFetch}&sortBy=${sort}`)
@@ -142,6 +149,7 @@ export default function Discount() {
                 setData([...items])
                 setTotal(meta.totalItems)
                 setIsLoading(false)
+                onClose()
             } else {
                 console.log(res)
                 message.error(res.data.message)
@@ -153,7 +161,7 @@ export default function Discount() {
         }
     }
     const onChangePagination = async (page, pageSize) => {
-        await getData(pageSize, page,sortBy)
+        await getData(pageSize, page, sortBy)
         setPage(page)
         setLimit(pageSize)
         window.scrollTo(0, 0)
@@ -165,53 +173,60 @@ export default function Discount() {
         fetchData()
     }, [])
     const handleFilter = async () => {
-        await getData(limit, page,sortBy)
+        await getData(limit, page, sortBy)
     }
     const clearFilter = async () => {
         setLimit(20)
         setPage(1)
         setSortBy("date_desc")
-        await getData(20, 1,"date_desc")
+        await getData(20, 1, "date_desc")
     }
     const onChangeSelectSortBy = (value) => {
         setSortBy(value)
     }
     return (
         <Spin tip="Đang tải. Xin vui lòng chờ" size="large" spinning={isLoading}>
-         <Row>
-                <Col xxl={6} xs={6}>
-                    <span>Sắp xếp theo:</span>
-                    <br></br>
-                    <Select
-                        value={sortBy}
-                        className='w-100'
-                        onChange={onChangeSelectSortBy}
-                        options={[
-                            {
-                                label: "Thời gian tạo gần nhất",
-                                value: "date_desc"
-                            },
-                            {
-                                label: 'Thời gian tạo xa nhất',
-                                value: 'date_asc',
-                            },
-                        ]}
-                    />
+            <Drawer title="Tìm kiếm" placement="right" onClose={onClose} open={open}>
+                <Row>
+                    <Col xxl={12} xs={12}>
+                        <span>Sắp xếp theo:</span>
+                        <br></br>
+                        <Select
+                            value={sortBy}
+                            className='w-100'
+                            onChange={onChangeSelectSortBy}
+                            options={[
+                                {
+                                    label: "Thời gian tạo gần nhất",
+                                    value: "date_desc"
+                                },
+                                {
+                                    label: 'Thời gian tạo xa nhất',
+                                    value: 'date_asc',
+                                },
+                            ]}
+                        />
+                    </Col>
+                    <Col xxl={12} xs={12} className="mt-3" >
+                        <span></span>
+                        <br></br>
+                        <div className='d-flex'>
+                            <Button type="primary" className='me-2 w-100' icon={<SearchOutlined />} onClick={handleFilter}>
+                                Tìm kiếm
+                            </Button>
+                            <Button onClick={clearFilter} type="primary" className="w-100" danger icon={<CloseOutlined />}>
+                                Xoá
+                            </Button>
+                        </div>
+                    </Col>
+                </Row>
+            </Drawer>
+            <Row className='mt-1'>
+                <Col xs={12}>
+                    <Button type="primary" className='ms-2' onClick={showDrawer} >
+                        <FilterOutlined />
+                    </Button>
                 </Col>
-                <Col xxl={6} xs={6} >
-                    <span></span>
-                    <br></br>
-                    <div className='d-flex'>
-                        <Button type="primary" className='mx-2' icon={<SearchOutlined />} onClick={handleFilter}>
-                            Tìm kiếm
-                        </Button>
-                        <Button onClick={clearFilter} type="primary" danger icon={<CloseOutlined />}>
-                            Xoá
-                        </Button>
-                    </div>
-                </Col>
-            </Row>
-            <Row className='mt-5'>
                 <Col xs={12} className="d-flex justify-content-end px-4">
                     <p>Hiển thị <span className='text-success fw-bold'>{data.length}</span> trên <span className='text-warning fw-bold'>{total}</span>
                         {/* Tổng số tiền nợ: <span className='text-danger'>{currencyConvert(sumOwed)}</span> .Tổng số: <span className='text-primary'>{currencyConvert(sum)}</span> */}

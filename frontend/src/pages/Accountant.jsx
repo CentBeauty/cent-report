@@ -34,6 +34,7 @@ export default function AccountantPage() {
             label: ` Tuổi nợ của khách hàng`,
             children: <Owed />,
         },
+
         {
             key: 2,
             label: `Khách hàng sử dụng dịch vụ`,
@@ -96,7 +97,7 @@ export default function AccountantPage() {
             <Row>
                 <Col xs={12}>
                     <div>
-                        <Tabs activeKey={keyTab}  items={items} onChange={onChange} />
+                        <Tabs type="card" activeKey={keyTab}  items={items} onChange={onChange} />
                     </div>
                 </Col>
             </Row>
