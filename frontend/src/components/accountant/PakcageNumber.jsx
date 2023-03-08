@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState,useRef } from "react"
 import { Spin, Select, Button, message, Drawer } from "antd"
 import { Row, Col } from "react-bootstrap"
 import Table from "ant-responsive-table";
@@ -10,6 +10,7 @@ export default function PackageNumber(){
     const [data, setData] = useState([])
     const [status, setStatus] = useState("1")
     const [open, setOpen] = useState(false);
+    const windowSize = useRef([window.innerWidth, window.innerHeight]);
     const showDrawer = () => {
         setOpen(true);
     };
@@ -45,7 +46,7 @@ export default function PackageNumber(){
             showOnDesktop: true
         },
     ];
-    const getData = async (s = "") => {
+    const getData = async (s = "1") => {
         setIsLoading(true)
         try {
             const res = await axiosService(`reports/accountant/count-package?status=${s}`)
@@ -113,7 +114,8 @@ export default function PackageNumber(){
                     showHeader: true,
                     columns,
                     dataSource: data,
-                    pagination: false
+                    pagination: false,
+                    scroll:{y:windowSize.current[1] || 500}
                 }}
                 mobileBreakPoint={768}
             />

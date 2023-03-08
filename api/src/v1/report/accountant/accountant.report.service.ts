@@ -138,7 +138,7 @@ export class AccountantReportsService {
     }
     async AnnouncePackage(query) {
         try {
-            const { limit, page, mobile, orderId, status, sortBy } = query
+            const { limit, page, mobile, orderId, status, sortBy, start, end } = query
 
             const options = {
                 limit: parseInt(limit) || 20,
@@ -170,6 +170,12 @@ export class AccountantReportsService {
                 queryOptions = {
                     ...queryOptions,
                     count_used: Raw(alias => `${alias} ${status === AnnouncePackageStatus.DANGER ? ">= 11" : "<11"}`)
+                }
+            }
+            if (start && end && start.length > 0 && end.length > 0 && parseInt(start) <= parseInt(end)) {
+                queryOptions = {
+                    ...queryOptions,
+                    count_used: Between(parseInt(start), parseInt(end))
                 }
             }
             const data = await paginate(this.packageRepository, options, {
@@ -275,7 +281,7 @@ export class AccountantReportsService {
                             id: true,
                             order_at: true
                         }
-                    }
+                    },
                 },
                 where: queryOptions,
                 order: {
@@ -284,7 +290,7 @@ export class AccountantReportsService {
                 relations: {
                     orderItems: {
                         order: true
-                    }
+                    },
                 },
                 cache: true,
             })
@@ -631,7 +637,7 @@ export class AccountantReportsService {
                     created_at: true,
                     rule_price: true,
                     customer_name: true,
-                    max_used:true,
+                    max_used: true,
                     orderItems: {
                         id: true,
                         order: {
@@ -674,7 +680,7 @@ export class AccountantReportsService {
                     created_name: x.orderItems[0].order.created_name,
                     priceFinal: x.rule_price > 0 ? x.rule_price || 0 : x.sale_card || 0,
                     discount: x.rule_price > 0 ? (x.sale_card - x.rule_price) || 0 : 0,
-                    priceRemain: (( x.rule_price > 0 ? x.rule_price : x.sale_card) / (x.max_used > 9999 ? 16 : x.max_used)) * ((x.max_used > 9999 ? 16 : x.max_used) - x.count_used)
+                    priceRemain: ((x.rule_price > 0 ? x.rule_price : x.sale_card) / (x.max_used > 9999 ? 16 : x.max_used)) * ((x.max_used > 9999 ? 16 : x.max_used) - x.count_used)
                 }
                 delete y.orderItems
                 return y
@@ -922,7 +928,7 @@ export class AccountantReportsService {
         }
     }
     async countPackage(query) {
-        const {status} = query
+        const { status } = query
         try {
 
             const data = await this.packageRepository

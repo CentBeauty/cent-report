@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState,useRef } from "react"
 import { Spin, Pagination, Drawer, Select, Button, message, DatePicker } from "antd"
 import { Row, Col } from "react-bootstrap"
 import Table from "ant-responsive-table";
@@ -20,6 +20,7 @@ export default function CustomerPaid() {
     const [startDate, setStartDate] = useState(dayjs().add(-7, 'd').format('YYYY-MM-DD'))
     const [endDate, setEndDate] = useState(dayjs().format('YYYY-MM-DD'))
     const [open, setOpen] = useState(false);
+    const windowSize = useRef([window.innerWidth, window.innerHeight]);
     const showDrawer = () => {
         setOpen(true);
     };
@@ -303,7 +304,8 @@ export default function CustomerPaid() {
                             showHeader: true,
                             columns,
                             dataSource: data,
-                            pagination: false
+                            pagination: false,
+                            scroll:{y:windowSize.current[1] || 500}
                         }}
                         mobileBreakPoint={768}
                     />

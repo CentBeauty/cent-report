@@ -1,6 +1,6 @@
 
 import { Pagination, Input, Select, Button, message, Spin, Tooltip, Drawer } from 'antd';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Row, Col } from "react-bootstrap"
 import { SearchOutlined, CloseOutlined, ProfileOutlined, MobileOutlined, MailOutlined, FilterOutlined } from '@ant-design/icons';
 import axiosService from '../../utils/axios.config';
@@ -8,7 +8,7 @@ import currencyConvert from '../../utils/currency';
 import moment from 'moment'
 import datetimeDifference from "datetime-difference";
 import Table from "ant-responsive-table";
-
+import ExportXlsx from '../common/ExportXlsx';
 export default function Owed() {
     const [page, setPage] = useState(1)
     const [limit, setLimit] = useState(20)
@@ -22,6 +22,8 @@ export default function Owed() {
     const [sumOwed, setSumOwed] = useState(0)
     const [sum, setSum] = useState(0)
     const [open, setOpen] = useState(false);
+
+    const windowSize = useRef([window.innerWidth, window.innerHeight]);
     const showDrawer = () => {
         setOpen(true);
     };
@@ -166,14 +168,17 @@ export default function Owed() {
                 setSumOwed(sumMoneyOwed || 0)
                 setIsLoading(false)
                 onClose()
+                return items
             } else {
                 console.log(res)
                 message.error(res.data.message)
+                return []
             }
         } catch (error) {
             console.error(error)
             message.error("Đã có lỗi xảy ra")
             setIsLoading(false)
+            return []
         }
     }
     useEffect(() => {
@@ -181,9 +186,28 @@ export default function Owed() {
             await getData()
         }
         fetchData()
+
     }, [])
     const onChangeSort = (value) => {
         setSort(value)
+    }
+    const handleExportData = async () => {
+        const getDataFetch = await getData(total, 1, phone, order, range, sort)
+
+        const dataEx = getDataFetch.map((x, i) => {
+            var now = moment(new Date()); //todays date
+            var end = moment(x.order_at); // another date
+            var duration = moment.duration(now.diff(end));
+            var days = duration.asDays();
+            return {
+                stt: i,
+                customer: x.customers.full_name,
+                order_code: x.order_code,
+                price: x.total_price,
+                days: Math.floor(days)
+            }
+        })
+        return dataEx
     }
     return (
         <Spin tip="Đang tải. Xin vui lòng chờ" size="large" spinning={isLoading}>
@@ -265,9 +289,12 @@ export default function Owed() {
             </Drawer>
             <Row className='mt-1'>
                 <Col xs={12}>
-                    <Button type="primary" className='ms-2' onClick={showDrawer} >
-                        <FilterOutlined />
-                    </Button>
+                    <div className='d-flex justify-content-between mb-2'>
+                        <Button type="primary" onClick={showDrawer} >
+                            <FilterOutlined />
+                        </Button>
+                        <ExportXlsx handleExportData={handleExportData} />
+                    </div>
                 </Col>
                 <Col xs={12} className="d-flex justify-content-end px-4">
                     <p>Hiển thị <span className='text-success fw-bold'>{data.length}</span> trên <span className='text-warning fw-bold'>{total}</span>.
@@ -282,8 +309,10 @@ export default function Owed() {
                             showHeader: true,
                             columns,
                             dataSource: data,
-                            pagination: false
+                            pagination: false,
+                            scroll: { y: windowSize.current[1] || 500 }
                         }}
+
                         mobileBreakPoint={768}
                     />
                 </Col>

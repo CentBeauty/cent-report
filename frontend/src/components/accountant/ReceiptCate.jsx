@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState,useRef } from "react"
 import { Spin, message, Descriptions } from "antd"
 import axiosService from "../../utils/axios.config";
 import dayjs from 'dayjs';
@@ -8,6 +8,7 @@ dayjs.extend(customParseFormat);
 export default function ReceiptCate(){
     const [isLoading, setIsLoading] = useState(false)
     const [data, setData] = useState({})
+    const windowSize = useRef([window.innerWidth, window.innerHeight]);
     const getData = async () => {
         setIsLoading(true)
         try {

@@ -99,7 +99,7 @@ export default function AccountantPage() {
 
     return (
 
-        <Container fluid className='box-container p-2 m-2'>
+        <Container fluid className='box-container'>
             <Row>
                 <Col xs={12}>
                     <div>

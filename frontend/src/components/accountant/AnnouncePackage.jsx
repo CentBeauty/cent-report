@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react"
-import { Spin, Pagination, Input, Select, Button, message, Tag,Drawer  } from "antd"
+import { useEffect, useState, useRef } from "react"
+import { Spin, Pagination, Input, Select, Button, message, Tag, Drawer, InputNumber } from "antd"
 import { Row, Col } from "react-bootstrap"
 import Table from "ant-responsive-table";
 import axiosService from "../../utils/axios.config";
 import { SearchOutlined, CloseOutlined, ProfileOutlined, MobileOutlined, FilterOutlined } from '@ant-design/icons';
+import ExportXlsx from '../common/ExportXlsx';
 export default function Announce() {
     const [isLoading, setIsLoading] = useState(false)
     const [data, setData] = useState([])
@@ -15,6 +16,9 @@ export default function Announce() {
     const [limit, setLimit] = useState(20)
     const [sortBy, setSortBy] = useState("date_desc")
     const [open, setOpen] = useState(false);
+    const [start, setStart] = useState("")
+    const [end, setEnd] = useState("")
+    const windowSize = useRef([window.innerWidth, window.innerHeight]);
     const showDrawer = () => {
         setOpen(true);
     };
@@ -143,26 +147,30 @@ export default function Announce() {
         setStatus(e.target.value)
     }
     const handleFilter = async () => {
-        await getData(limit, page, phone, order, status, sortBy)
+        await getData(limit, page, phone, order, status, sortBy, start, end)
     }
-    const getData = async (limitFetch = 20, pageFetch = 1, phoneFetch = "", orderId = "", statusFetch = "", sort = "date_desc") => {
+    const getData = async (limitFetch = 20, pageFetch = 1, phoneFetch = "", orderId = "", statusFetch = "", sort = "date_desc", s = "", e = "") => {
         setIsLoading(true)
         try {
-            const res = await axiosService(`reports/accountant/announce-package?page=${pageFetch}&limit=${limitFetch}&mobile=${phoneFetch}&status=${statusFetch}&orderId=${orderId}&sortBy=${sort}`)
+            const res = await axiosService(`reports/accountant/announce-package?page=${pageFetch}&limit=${limitFetch}&mobile=${phoneFetch}&status=${statusFetch}&orderId=${orderId}&sortBy=${sort}&start=${s}&end=${e}`)
             if (res.data.code === 200) {
                 const { items, meta, } = res.data.data
                 setData([...items])
                 setTotal(meta.totalItems)
                 setIsLoading(false)
                 onClose()
+                return items
             } else {
                 console.log(res)
                 message.error(res.data.message)
+                setIsLoading(false)
+                return []
             }
         } catch (error) {
             console.error(error)
             message.error("Đã có lỗi xảy ra")
             setIsLoading(false)
+            return []
         }
     }
     useEffect(() => {
@@ -177,13 +185,50 @@ export default function Announce() {
         setPhone("")
         setLimit(20)
         setPage(1)
-        await getData(20, 1, "", "", "", "date_desc")
+        await getData(20, 1, "", "", "", "date_desc", "", "")
     }
     const onChangePagination = async (page, pageSize) => {
         setPage(page)
         setLimit(pageSize)
-        await getData(pageSize, page, phone, order, status, sortBy)
+        await getData(pageSize, page, phone, order, status, sortBy, start, end)
         window.scrollTo(0, 0)
+    }
+    const onChangeStart = (x) => {
+        setStart(x)
+    }
+    const onChangeEnd = (x) => {
+        setEnd(x)
+    }
+    const handleExportData = async () => {
+        setIsLoading(true)
+        try {
+            const res = await axiosService(`reports/accountant/announce-package?page=${1}&limit=${total}&mobile=${phone}&status=${status}&orderId=${order}&sortBy=${sortBy}&start=${start}&end=${end}`)
+            if (res.data.code === 200) {
+                setIsLoading(false)
+                const mapData = res.data.data.items.map((x,i)=>{
+                    return{
+                        stt:i,
+                        customer:x.customer.name,
+                        service:x.product_name,
+                        order_code:x.order_code,
+                        number_session_is_use:x.max_used,
+                        count_used : x.count_used,
+                        status: x.count_used >=11 ? "Báo động" : "Bình thường"
+                    }
+                })
+                return mapData
+            } else {
+                message.error("Có lỗi xảy ra xin vui lòng thử lại")
+                console.error(data.message)
+                setIsLoading(false)
+                return []
+            }
+        } catch (error) {
+            console.error(error)
+            message.error("Có lỗi xảy ra xin vui lòng thử lại")
+            setIsLoading(false)
+            return []
+        }
     }
     return (
         <Spin tip="Đang tải. Xin vui lòng chờ" size="large" spinning={isLoading}>
@@ -196,6 +241,13 @@ export default function Announce() {
                     <Col xxl={12} xs={12} className="mt-2">
                         <span>Mã hoá đơn:</span>
                         <Input onChange={onChangeOrder} placeholder="Nhập mã hoá đơn" value={order} />
+                    </Col>
+                    <Col xxl={12} xs={12} className="mt-2">
+                        <span>Khoảng buổi:</span>
+                        <div className="d-flex justify-content-between">
+                            <InputNumber min={0} value={start} className="w-100 me-2" onChange={onChangeStart} placeholder="Bắt đầu" />
+                            <InputNumber min={0} value={end} onChange={onChangeEnd} className="w-100" placeholder="Kết thúc" />
+                        </div>
                     </Col>
                     <Col xxl={12} xs={12} className="mt-2">
                         <span>Trạng thái:</span>
@@ -253,9 +305,12 @@ export default function Announce() {
             </Drawer>
             <Row className='mt-1'>
                 <Col xs={12}>
-                    <Button type="primary" className='ms-2' onClick={showDrawer} >
-                        <FilterOutlined />
-                    </Button>
+                    <div className="d-flex justify-content-between mb-2">
+                        <Button type="primary" className='ms-2' onClick={showDrawer} >
+                            <FilterOutlined />
+                        </Button>
+                        <ExportXlsx handleExportData={handleExportData} />
+                    </div>
                 </Col>
                 <Col xs={12} className="d-flex justify-content-end px-4">
                     <p>Hiển thị <span className='text-success fw-bold'>{data.length}</span> trên <span className='text-warning fw-bold'>{total}</span>.
@@ -270,7 +325,8 @@ export default function Announce() {
                             showHeader: true,
                             columns,
                             dataSource: data,
-                            pagination: false
+                            pagination: false,
+                            scroll: { y: windowSize.current[1] || 500 }
                         }}
                         mobileBreakPoint={768}
                     />

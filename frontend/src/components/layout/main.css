@@ -8,7 +8,7 @@
   position: sticky;
   background-color: aliceblue;
   bottom: 0;
-  z-index: 1;
+  z-index: 2;
 }
 .menu-desktop{
   position: -webkit-sticky;

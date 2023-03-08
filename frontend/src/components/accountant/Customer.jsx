@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState ,useRef} from "react"
 import { Spin, DatePicker, Button, message, Descriptions, Drawer } from "antd"
 import { Row, Col } from "react-bootstrap"
 import axiosService from "../../utils/axios.config";
@@ -19,6 +19,7 @@ export default function Customer() {
     const [startDate, setStartDate] = useState(dayjs().add(-7, 'd').format('YYYY-MM-DD'))
     const [endDate, setEndDate] = useState(dayjs().format('YYYY-MM-DD'))
     const [open, setOpen] = useState(false);
+    const windowSize = useRef([window.innerWidth, window.innerHeight]);
     const showDrawer = () => {
         setOpen(true);
     };

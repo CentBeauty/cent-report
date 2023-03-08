@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Layout, theme, Avatar, Dropdown, message } from 'antd';
 const { Content, Header } = Layout;
 import BreadcrumbComponent from './BreadCrumb';
+import BackToTp from '../common/BackTop';
 import {
   UserOutlined,
   ArrowRightOutlined
@@ -68,41 +69,44 @@ export default function LayoutComponent({ children }) {
     },
   ];
   return (
-    <Layout
-      style={{
-        minHeight: '100vh',
-      }}
-    >
-      <DesktopMenu />
-      <Layout className="site-layout">
-        <Header
-          style={{
-            background: colorBgContainer,
-          }}
-          className="pt-3 px-5 box"
-        >
-          <div>
-            
-          </div>
-          <div className='d-flex justify-content-end w-100 mx-0'>
-            <Dropdown
-              menu={{
-                items: itemsDrop,
-              }}
-              placement="bottom"
-              arrow
-              style={{ width: "300px" }}
-            >
-              <Avatar size="large" className="shadow-avatar" icon={<UserOutlined />} src={user.data.avatar_url ? user.data.avatar_url : "https://joesch.moe/api/v1/random"} />
-            </Dropdown>
-          </div>
-        </Header>
-        <Content className='m-2'>
-          {/* <BreadcrumbComponent /> */}
-          {children}
-        </Content>
-        <MobileMenu />
+    <>
+      <Layout
+        style={{
+          minHeight: '100vh',
+        }}
+      >
+        <DesktopMenu />
+        <Layout className="site-layout">
+          <Header
+            style={{
+              background: colorBgContainer,
+            }}
+            className="pt-3 px-5 box"
+          >
+            <div>
+
+            </div>
+            <div className='d-flex justify-content-end w-100 mx-0'>
+              <Dropdown
+                menu={{
+                  items: itemsDrop,
+                }}
+                placement="bottom"
+                arrow
+                style={{ width: "300px" }}
+              >
+                <Avatar size="large" className="shadow-avatar" icon={<UserOutlined />} src={user.data.avatar_url ? user.data.avatar_url : "https://joesch.moe/api/v1/random"} />
+              </Dropdown>
+            </div>
+          </Header>
+          <Content className='m-2'>
+            {/* <BreadcrumbComponent /> */}
+            {children}
+          </Content>
+          <MobileMenu />
+        </Layout>
       </Layout>
-    </Layout>
+      <BackToTp />
+    </>
   );
 }

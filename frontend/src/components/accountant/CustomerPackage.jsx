@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Spin, Pagination, Input, DatePicker, Button, message, Select, Drawer } from "antd"
 import { Row, Col } from "react-bootstrap"
 import Table from "ant-responsive-table";
 import axiosService from "../../utils/axios.config";
 import { SearchOutlined, CloseOutlined, FilterOutlined } from '@ant-design/icons';
 import currencyConvert from '../../utils/currency';
+import ExportXlsx from '../common/ExportXlsx';
 const { RangePicker } = DatePicker;
 export default function CustomerPackage() {
     const [isLoading, setIsLoading] = useState(false)
@@ -18,6 +19,7 @@ export default function CustomerPackage() {
     const [endDate, setEndDate] = useState("")
     const [sortBy, setSortBy] = useState("date_desc")
     const [open, setOpen] = useState(false);
+    const windowSize = useRef([window.innerWidth, window.innerHeight]);
     const showDrawer = () => {
         setOpen(true);
     };
@@ -228,6 +230,40 @@ export default function CustomerPackage() {
     const onChangeSelectSortBy = (value) => {
         setSortBy(value)
     }
+    const handleExportData = async () => {
+        setIsLoading(true)
+        try {
+            const res = await axiosService(`reports/accountant/customer-package?page=${1}&limit=${total}&mobile=${phone}&orderId=${order}&startDate=${startDate}&endDate=${endDate}&sortBy=${sortBy}`)
+            if (res.data.code === 200) {
+                setIsLoading(false)
+                const mapData = res.data.data.items.map((x, i) => {
+                    return {
+                        stt: i,
+                        service: x.product_name,
+                        customer: x.customer_mobile,
+                        order_code: x.order_code,
+                        net_revenue: x.price.sale > 0 ? x.price.sale : x.price.initial,
+                        revenue_per_session: x.receipt_per_count,
+                        max_used: x.max_used,
+                        count_used: x.count_used,
+                        use_in_range_date: x.useInRangeDate,
+                        revenue_in_date: x.ReceiptInDate
+                    }
+                })
+                return mapData
+            } else {
+                message.error("Có lỗi xảy ra xin vui lòng thử lại")
+                console.error(data.message)
+                setIsLoading(false)
+                return []
+            }
+        } catch (error) {
+            console.error(error)
+            message.error("Có lỗi xảy ra xin vui lòng thử lại")
+            setIsLoading(false)
+            return []
+        }
+    }
     return (
         <Spin tip="Đang tải. Xin vui lòng chờ" size="large" spinning={isLoading}>
             <Drawer title="Tìm kiếm" placement="right" onClose={onClose} open={open}>
@@ -280,9 +316,12 @@ export default function CustomerPackage() {
             </Drawer>
             <Row className='mt-1'>
                 <Col xs={12}>
-                    <Button type="primary" className='ms-2' onClick={showDrawer} >
-                        <FilterOutlined />
-                    </Button>
+                    <div className="d-flex justify-content-between mb-2">
+                        <Button type="primary" className='ms-2' onClick={showDrawer} >
+                            <FilterOutlined />
+                        </Button>
+                        <ExportXlsx handleExportData={handleExportData} />
+                    </div>
                 </Col>
                 <Col xs={12} className="d-flex justify-content-end px-4">
                     <p>Hiển thị <span className='text-success fw-bold'>{data.length}</span> trên <span className='text-warning fw-bold'>{total}</span>.
@@ -297,7 +336,8 @@ export default function CustomerPackage() {
                             showHeader: true,
                             columns,
                             dataSource: data,
-                            pagination: false
+                            pagination: false,
+                            scroll: { y: windowSize.current[1] || 500 }
                         }}
                         mobileBreakPoint={768}
                     />
