@@ -196,7 +196,7 @@ export default function CustomerPackage() {
         setPhone(e.target.value)
     }
     const onChangeOrder = (e) => {
-        setStatus(e.target.value)
+        setOrder(e.target.value)
     }
     const onChangePagination = async (page, pageSize) => {
         setPage(page)
