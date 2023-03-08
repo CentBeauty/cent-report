@@ -162,6 +162,39 @@ export default function PackageNotUse() {
             showOnResponse: true,
             showOnDesktop: true
         },
+        {
+            title: 'Số buổi được sử dụng',
+            dataIndex: 'max_used',
+            key: "max_used",
+            width: '10%',
+            render: (x, record) => {
+                return <p>{x > 9999 ?"Vĩnh viễn":x}</p>
+            },
+            showOnResponse: true,
+            showOnDesktop: true
+        },
+        {
+            title: 'Số buổi đã sử dụng',
+            dataIndex: 'count_used',
+            key: "count_used",
+            width: '10%',
+            render: (x, record) => {
+                return <p>{x}</p>
+            },
+            showOnResponse: true,
+            showOnDesktop: true
+        },
+        {
+            title: 'Doanh thu chưa thực hiện',
+            dataIndex: 'priceRemain',
+            key: "priceRemain",
+            width: '10%',
+            render: (x, record) => {
+                return <p>{currencyConvert(x)}</p>
+            },
+            showOnResponse: true,
+            showOnDesktop: true
+        },
     ];
     const getData = async (limitFetch = 20, pageFetch = 1, sort = "date_desc") => {
         setIsLoading(true)

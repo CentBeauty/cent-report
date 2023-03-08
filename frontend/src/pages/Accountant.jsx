@@ -15,6 +15,7 @@ import PackageNotUse from '../components/accountant/PackageNotUse';
 import CustomerPaid from '../components/accountant/CustomerPaid';
 import Customer from '../components/accountant/Customer';
 import ReceiptCate from '../components/accountant/ReceiptCate';
+import PackageNumber from '../components/accountant/PakcageNumber';
 export default function AccountantPage() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
@@ -84,6 +85,11 @@ export default function AccountantPage() {
             key: 11,
             label: `Doanh số trong tháng Nhóm dịch vụ`,
             children: <ReceiptCate />,
+        },
+        {
+            key: 12,
+            label: `Số lượng thẻ dịch vụ`,
+            children: <PackageNumber />,
         },
     ];
     

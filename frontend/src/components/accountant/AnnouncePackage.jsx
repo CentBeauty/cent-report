@@ -89,13 +89,13 @@ export default function Announce() {
         },
         {
             title: 'Số buổi được sử dụng',
-            dataIndex: 'money_owed',
-            key: "money_owed",
+            dataIndex: 'max_used',
+            key: "max_used",
             with: "10%",
             render: (x, record) => {
                 return (
                     <>
-                        <p >TRIỆT BHVV </p>
+                        <p >{x > 9999 ? "Vĩnh viễn" : x} </p>
                     </>
                 )
             },

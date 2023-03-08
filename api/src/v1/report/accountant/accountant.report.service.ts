@@ -16,6 +16,7 @@ import * as helper from '../../helpers/response'
 import { LooseObject } from 'interfaces/looseObject.interface';
 import { Like } from "typeorm";
 import { AnnouncePackageStatus } from '../enums/announcePackage.enum';
+import * as constant from '../constant';
 
 import {
     paginate,
@@ -115,7 +116,7 @@ export class AccountantReportsService {
                 let sumMoney = _.sumBy(items, function (o) { return o.total_price })
                 const itemsNew = items.map(x => {
                     return {
-                        key:x.id,
+                        key: x.id,
                         ...x,
                         order: {
                             ...x
@@ -190,9 +191,9 @@ export class AccountantReportsService {
             })
 
             const { items } = data
-            const newItem = items.map((x,i) => {
+            const newItem = items.map((x, i) => {
                 return {
-                    key:`key-${i}`,
+                    key: `key-${i}`,
                     ...x,
                     package: {
                         name: x.product_name,
@@ -287,13 +288,13 @@ export class AccountantReportsService {
                 },
                 cache: true,
             })
-            
+
             const { items } = data
 
             const newItem = items.map(x => {
                 let newObject: LooseObject = {
                     ...x,
-                    key:x.id,
+                    key: x.id,
                     price: {
                         initial: x.sale_card,
                         sale: x.rule_price
@@ -377,7 +378,7 @@ export class AccountantReportsService {
                 let sumMoney2 = _.sumBy(x.order, function (o) { return o.total_price })
                 return {
                     ...x,
-                    key:x.id,
+                    key: x.id,
                     billNumber: x.order.length,
                     sumMoney,
                     sumPerBills: sumMoney2 / x.order.length || 0,
@@ -413,7 +414,7 @@ export class AccountantReportsService {
                         order_at: true,
                         order_code: true,
                         created_name: true,
-                        sale_rule_applied_ids:true,
+                        sale_rule_applied_ids: true,
                         source_from: true,
                         customer: {
                             id: true,
@@ -446,7 +447,7 @@ export class AccountantReportsService {
             let { items } = data
             let itemsNew = items.map(x => {
                 const newObject = {
-                    key:x.id,
+                    key: x.id,
                     ...x,
                     ...x.order
                 }
@@ -510,7 +511,7 @@ export class AccountantReportsService {
             let itemsNew = items.map(x => {
                 const newObject = {
                     ...x,
-                    key:x.id,
+                    key: x.id,
                     ...x.order,
                     priceFinal: x.price - x.discount
                 }
@@ -586,7 +587,7 @@ export class AccountantReportsService {
                     const filter = items.filter(x => x.employee_service1 != null).map(x => {
                         return {
                             ...x,
-                            key:x.id,
+                            key: x.id,
                             name: x.employee_service1
                         }
                     })
@@ -596,7 +597,7 @@ export class AccountantReportsService {
                     const filter = items.filter(x => x.employee_service2 != null).map(x => {
                         return {
                             ...x,
-                            key:x.id,
+                            key: x.id,
                             name: x.employee_service2
                         }
                     })
@@ -630,6 +631,7 @@ export class AccountantReportsService {
                     created_at: true,
                     rule_price: true,
                     customer_name: true,
+                    max_used:true,
                     orderItems: {
                         id: true,
                         order: {
@@ -642,7 +644,6 @@ export class AccountantReportsService {
                     }
                 },
                 where: {
-                    count_used: 0,
                     status: 1,
                     parent_package: IsNull(),
                     soft_delete: IsNull()
@@ -672,7 +673,8 @@ export class AccountantReportsService {
                     source_from: x.orderItems[0].order.source_from,
                     created_name: x.orderItems[0].order.created_name,
                     priceFinal: x.rule_price > 0 ? x.rule_price || 0 : x.sale_card || 0,
-                    discount: x.rule_price > 0 ? (x.sale_card - x.rule_price) || 0 : 0
+                    discount: x.rule_price > 0 ? (x.sale_card - x.rule_price) || 0 : 0,
+                    priceRemain: (( x.rule_price > 0 ? x.rule_price : x.sale_card) / (x.max_used > 9999 ? 16 : x.max_used)) * ((x.max_used > 9999 ? 16 : x.max_used) - x.count_used)
                 }
                 delete y.orderItems
                 return y
@@ -908,12 +910,29 @@ export class AccountantReportsService {
             })
 
             const grouped = _.groupBy(mapData, (x) => x.cate);
-            const res : LooseObject = {}
+            const res: LooseObject = {}
             for (const key of Object.keys(grouped)) {
                 const total = _.sumBy(grouped[key], function (o) { return (o.rule_price > 0 ? o.rule_price : o.sale_card) })
                 res[key] = total
             }
             return helper.success(res)
+        } catch (error) {
+            console.error(error)
+            return helper.error(error)
+        }
+    }
+    async countPackage(query) {
+        const {status} = query
+        try {
+
+            const data = await this.packageRepository
+                .createQueryBuilder('package')
+                .select("COUNT(package.id)", "amount")
+                .where("package.status = :status", { status: parseInt(status) })
+                .innerJoinAndSelect("package.product", "product")
+                .groupBy("package.product_id").getRawMany()
+
+            return helper.success(data)
         } catch (error) {
             console.error(error)
             return helper.error(error)
