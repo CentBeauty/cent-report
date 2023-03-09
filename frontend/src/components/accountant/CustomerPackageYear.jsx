@@ -5,6 +5,7 @@ import axiosService from "../../utils/axios.config";
 import { SearchOutlined, CloseOutlined, FilterOutlined } from '@ant-design/icons';
 import moment from "moment"
 import dayjs from 'dayjs';
+import "../../styles/fixHeader.style.css"
 export default function CustomerPackageYear() {
     const [isLoading, setIsLoading] = useState(false)
     const [data, setData] = useState([])
@@ -93,8 +94,8 @@ export default function CustomerPackageYear() {
             </Row>
             <Row className='mt-0'>
                 <Col xs={12} className="w-100">
-                    <Table striped bordered hover responsive>
-                        <thead>
+                <Table striped bordered hover responsive className="table-fixed">
+                        <thead style={{position: "sticky", top: 0}}>
                             <tr>
                                 <th>Tên dịch vụ</th>
                                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(x => {
