@@ -100,8 +100,8 @@ export default function AccountantPage() {
     ];
     
     useEffect(() => {
-        document.title = "Accountant report page"
-    }, [])
+        document.title = items[keyTab-1].label
+    }, [keyTab])
 
     return (
 

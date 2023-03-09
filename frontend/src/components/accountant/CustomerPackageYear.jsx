@@ -93,7 +93,7 @@ export default function CustomerPackageYear() {
             </Row>
             <Row className='mt-0'>
                 <Col xs={12} className="w-100">
-                    <Table striped bordered hover>
+                    <Table striped bordered hover responsive>
                         <thead>
                             <tr>
                                 <th>Tên dịch vụ</th>
