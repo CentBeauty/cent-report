@@ -1,4 +1,4 @@
-import { useEffect, useState,useRef } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Spin, Pagination, DatePicker, Button, message, Select, Drawer } from "antd"
 import { Row, Col } from "react-bootstrap"
 import Table from "ant-responsive-table";
@@ -6,8 +6,10 @@ import axiosService from "../../utils/axios.config";
 import { SearchOutlined, CloseOutlined, FilterOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+import ExportXlsx from '../common/ExportXlsx';
 dayjs.extend(customParseFormat);
 const { RangePicker } = DatePicker;
+
 export default function CountServiceKtv() {
     const [isLoading, setIsLoading] = useState(false)
     const [data, setData] = useState([])
@@ -133,6 +135,34 @@ export default function CountServiceKtv() {
         }
         fetchData()
     }, [])
+    const handleExportData = async () => {
+        setIsLoading(true)
+        try {
+            const res = await axiosService(`reports/accountant/count-service-ktv?page=${1}&limit=${total}&startDate=${startDate}&endDate=${endDate}&sortBy=${sortBy}`)
+            if (res.data.code === 200) {
+                setIsLoading(false)
+                const mapData = res.data.data.items.map((x, i) => {
+                    return {
+                        stt: i,
+                        ktv_ids: x.name,
+                        service: x.product_name,
+                        store: x.order?.stores.name_store
+                    }
+                })
+                return mapData
+            } else {
+                message.error("Có lỗi xảy ra xin vui lòng thử lại")
+                console.error(data.message)
+                setIsLoading(false)
+                return []
+            }
+        } catch (error) {
+            console.error(error)
+            message.error("Có lỗi xảy ra xin vui lòng thử lại")
+            setIsLoading(false)
+            return []
+        }
+    }
     return (
         <Spin tip="Đang tải. Xin vui lòng chờ" size="large" spinning={isLoading}>
             <Drawer title="Tìm kiếm" placement="right" onClose={onClose} open={open}>
@@ -179,9 +209,12 @@ export default function CountServiceKtv() {
             </Drawer>
             <Row className='mt-1'>
                 <Col xs={12}>
-                    <Button type="primary" className='ms-2' onClick={showDrawer} >
-                        <FilterOutlined />
-                    </Button>
+                    <div className="d-flex justify-content-between mb-2">
+                        <Button type="primary" className='ms-2' onClick={showDrawer} >
+                            <FilterOutlined />
+                        </Button>
+                        <ExportXlsx handleExportData={handleExportData} />
+                    </div>
                 </Col>
                 <Col xs={12} className="d-flex justify-content-end px-4">
                     <p>Hiển thị <span className='text-success fw-bold'>{data.length}</span> trên <span className='text-warning fw-bold'>{total}</span>.
@@ -197,7 +230,7 @@ export default function CountServiceKtv() {
                             columns,
                             dataSource: data,
                             pagination: false,
-                            scroll:{y:windowSize.current[1] || 500}
+                            scroll: { y: windowSize.current[1] || 500 }
                         }}
                         mobileBreakPoint={768}
                     />

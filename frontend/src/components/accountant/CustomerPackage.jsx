@@ -6,6 +6,7 @@ import axiosService from "../../utils/axios.config";
 import { SearchOutlined, CloseOutlined, FilterOutlined } from '@ant-design/icons';
 import currencyConvert from '../../utils/currency';
 import ExportXlsx from '../common/ExportXlsx';
+
 const { RangePicker } = DatePicker;
 export default function CustomerPackage() {
     const [isLoading, setIsLoading] = useState(false)

@@ -83,7 +83,7 @@ export default function AccountantPage() {
         },
         {
             key: 11,
-            label: `Doanh số trong tháng Nhóm dịch vụ`,
+            label: `Doanh số nhóm dịch vụ`,
             children: <ReceiptCate />,
         },
         {

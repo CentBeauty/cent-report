@@ -1,4 +1,4 @@
-import { useEffect, useState,useRef } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Spin, Pagination, Select, Button, message, Drawer } from "antd"
 import { Row, Col } from "react-bootstrap"
 import Table from "ant-responsive-table";
@@ -6,7 +6,7 @@ import axiosService from "../../utils/axios.config";
 import { SearchOutlined, CloseOutlined, FilterOutlined } from '@ant-design/icons';
 import moment from 'moment'
 import currencyConvert from '../../utils/currency';
-
+import ExportXlsx from '../common/ExportXlsx';
 export default function PackageNotUse() {
     const [isLoading, setIsLoading] = useState(false)
     const [data, setData] = useState([])
@@ -27,7 +27,7 @@ export default function PackageNotUse() {
             title: 'STT',
             dataIndex: 'id',
             key: "id",
-            width: '2%',
+            width: "2%",
             render: (y, record) => {
                 const findIndex = data.findIndex(x => {
                     return x.id == y
@@ -41,7 +41,6 @@ export default function PackageNotUse() {
             title: 'Mã đơn từ',
             dataIndex: 'order_code',
             key: "order_code",
-            width: '5%',
             render: (x, record) => {
                 return (
                     <>
@@ -56,7 +55,6 @@ export default function PackageNotUse() {
             title: 'Ngày',
             dataIndex: 'order_at',
             key: "order_at",
-            width: '15%',
             render: (x, record) => {
                 return (
                     <>
@@ -69,7 +67,6 @@ export default function PackageNotUse() {
         },
         {
             title: 'Telesale',
-            width: '5%',
             dataIndex: "source_from",
             key: "source_from",
             render: (x, record) => {
@@ -86,7 +83,6 @@ export default function PackageNotUse() {
             title: 'Cashier',
             dataIndex: 'created_name',
             key: "created_name",
-            with: "5%",
             render: (x, record) => {
                 return (
                     <>
@@ -101,7 +97,6 @@ export default function PackageNotUse() {
             title: 'Khách hàng',
             dataIndex: 'customer_name',
             key: "customer_name",
-            width: '20%',
             render: (x, record) => {
                 return <p>{x}</p>
             },
@@ -112,7 +107,6 @@ export default function PackageNotUse() {
             title: 'Dịch vụ',
             dataIndex: 'product_name',
             key: "product_name",
-            width: '20%',
             render: (x, record) => {
                 return <p>{x}</p>
             },
@@ -123,7 +117,6 @@ export default function PackageNotUse() {
             title: 'Mã giảm giá',
             dataIndex: 'order',
             key: "order",
-            width: '10%',
             render: (x, record) => {
                 return <p>{x.sale_rule_applied_ids || "Không có"}</p>
             },
@@ -134,7 +127,6 @@ export default function PackageNotUse() {
             title: 'Tổng doanh thu',
             dataIndex: 'sale_card',
             key: "sale_card",
-            width: '10%',
             render: (x, record) => {
                 return <p>{currencyConvert(x)}</p>
             },
@@ -145,7 +137,6 @@ export default function PackageNotUse() {
             title: 'Chiết khấu bằng tiền',
             dataIndex: 'discount',
             key: "discount",
-            width: '10%',
             render: (x, record) => {
                 return <p>{currencyConvert(x)}</p>
             },
@@ -156,7 +147,6 @@ export default function PackageNotUse() {
             title: 'Doanh thu thuần',
             dataIndex: 'priceFinal',
             key: "priceFinal",
-            width: '10%',
             render: (x, record) => {
                 return <p>{currencyConvert(x)}</p>
             },
@@ -167,9 +157,8 @@ export default function PackageNotUse() {
             title: 'Số buổi được sử dụng',
             dataIndex: 'max_used',
             key: "max_used",
-            width: '10%',
             render: (x, record) => {
-                return <p>{x > 9999 ?"Vĩnh viễn":x}</p>
+                return <p>{x > 9999 ? "Vĩnh viễn" : x}</p>
             },
             showOnResponse: true,
             showOnDesktop: true
@@ -178,7 +167,6 @@ export default function PackageNotUse() {
             title: 'Số buổi đã sử dụng',
             dataIndex: 'count_used',
             key: "count_used",
-            width: '10%',
             render: (x, record) => {
                 return <p>{x}</p>
             },
@@ -189,7 +177,6 @@ export default function PackageNotUse() {
             title: 'Doanh thu chưa thực hiện',
             dataIndex: 'priceRemain',
             key: "priceRemain",
-            width: '10%',
             render: (x, record) => {
                 return <p>{currencyConvert(x)}</p>
             },
@@ -241,6 +228,43 @@ export default function PackageNotUse() {
     const onChangeSelectSortBy = (value) => {
         setSortBy(value)
     }
+    const handleExportData = async () => {
+        setIsLoading(true)
+        try {
+            const res = await axiosService(`reports/accountant/package-not-use?page=${1}&limit=${total}&sortBy=${sortBy}`)
+            if (res.data.code === 200) {
+                setIsLoading(false)
+                const mapData = res.data.data.items.map((x, i) => {
+                    return {
+                        stt: i,
+                        order_code: x.order_code,
+                        order_at: x.order_at,
+                        telesale: x.source_from,
+                        cashier: x.created_name,
+                        customer: x.customer_name,
+                        service: x.product_name,
+                        revenue: x.sale_card,
+                        discount: x.discount,
+                        net_revenue: x.priceFinal,
+                        max_used:x.max_used,
+                        count_used:x.count_used,
+                        unrealized_revenue:x.priceRemain
+                    }
+                })
+                return mapData
+            } else {
+                message.error("Có lỗi xảy ra xin vui lòng thử lại")
+                console.error(data.message)
+                setIsLoading(false)
+                return []
+            }
+        } catch (error) {
+            console.error(error)
+            message.error("Có lỗi xảy ra xin vui lòng thử lại")
+            setIsLoading(false)
+            return []
+        }
+    }
     return (
         <Spin tip="Đang tải. Xin vui lòng chờ" size="large" spinning={isLoading}>
             <Drawer title="Tìm kiếm" placement="right" onClose={onClose} open={open}>
@@ -280,9 +304,12 @@ export default function PackageNotUse() {
             </Drawer>
             <Row className='mt-1'>
                 <Col xs={12}>
-                    <Button type="primary" className='ms-2' onClick={showDrawer} >
-                        <FilterOutlined />
-                    </Button>
+                    <div className="d-flex justify-content-between mb-2">
+                        <Button type="primary" className='ms-2' onClick={showDrawer} >
+                            <FilterOutlined />
+                        </Button>
+                        <ExportXlsx handleExportData={handleExportData} />
+                    </div>
                 </Col>
                 <Col xs={12} className="d-flex justify-content-end px-4">
                     <p>Hiển thị <span className='text-success fw-bold'>{data.length}</span> trên <span className='text-warning fw-bold'>{total}</span>
@@ -298,7 +325,7 @@ export default function PackageNotUse() {
                             columns,
                             dataSource: data,
                             pagination: false,
-                            scroll:{y:windowSize.current[1] || 500}
+                            scroll: { y: windowSize.current[1] || 500 }
                         }}
                         mobileBreakPoint={768}
                     />

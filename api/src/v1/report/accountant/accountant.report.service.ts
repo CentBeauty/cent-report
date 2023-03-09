@@ -462,7 +462,7 @@ export class AccountantReportsService {
                             id: true,
                             full_name: true
                         },
-                        staff_booking:true
+                        staff_booking: true
                     },
                     price: true,
                     discount: true,
@@ -499,13 +499,54 @@ export class AccountantReportsService {
     }
     async collection(query) {
         try {
-            const { limit, page, sortBy } = query
+            const { limit, page, sortBy, orderId, mobile, startDate, endDate } = query
 
             const options = {
                 limit: parseInt(limit) || 20,
                 page: parseInt(page) || 1
             }
+            let queryOptions: LooseObject = {
+                order: {
+                    soft_delete: IsNull(),
+                    status: 3,
+                    total_price: Raw(alias => `${alias} >0`)
+                }
+            }
 
+            if (mobile && mobile.length > 0) {
+                queryOptions = {
+                    ...queryOptions,
+                    order: {
+                        ...queryOptions.order,
+                        customer: {
+                            mobile: Like(`%${mobile}%`)
+                        }
+                    }
+                }
+            }
+            if (orderId && orderId.length > 0) {
+                queryOptions = {
+                    ...queryOptions,
+                    order: {
+                        ...queryOptions.order,
+                        order_code: orderId
+                    }
+                }
+            }
+            if (startDate && startDate.length > 0 && endDate && endDate.length > 0) {
+                const start = moment(new Date(startDate)).startOf("day").format("YYYY-MM-DD HH:mm:ss")
+                const end = moment(new Date(endDate)).endOf("day").format("YYYY-MM-DD HH:mm:ss")
+                queryOptions = {
+                    ...queryOptions,
+                    order: {
+                        ...queryOptions.order,
+                        order_at: Between(
+                            new Date(start),
+                            new Date(end)
+                        )
+                    }
+                }
+            }
             const data = await paginate(this.orderItemRepository, options, {
                 select: {
                     id: true,
@@ -520,19 +561,14 @@ export class AccountantReportsService {
                             id: true,
                             full_name: true
                         },
-                        discount_by_total_bill:true
+                        discount_by_total_bill: true
                     },
                     employee_service_name1: true,
                     price: true,
                     discount: true,
                     product_name: true
                 },
-                where: {
-                    order: {
-                        soft_delete: IsNull(),
-                        status: 3
-                    }
-                },
+                where: queryOptions,
                 relations: {
                     order: {
                         customer: true
@@ -904,10 +940,11 @@ export class AccountantReportsService {
             return helper.error(error)
         }
     }
-    async packageReceipt() {
+    async packageReceipt(query) {
+        const { startDate, endDate } = query
         try {
-            const startOfMonth = moment().startOf('month').format('YYYY-MM-DD HH:mm:ss');
-            const now = moment().endOf('day').format('YYYY-MM-DD HH:mm:ss');
+            const startOfMonth = moment(new Date(startDate)).format('YYYY-MM-DD HH:mm:ss');
+            const now = moment(new Date(endDate)).endOf('day').format('YYYY-MM-DD HH:mm:ss');
 
             const data = await this.packageRepository.find({
                 select: {

@@ -1,4 +1,4 @@
-import { useEffect, useState,useRef } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Spin, Pagination, Drawer, Select, Button, message, DatePicker } from "antd"
 import { Row, Col } from "react-bootstrap"
 import Table from "ant-responsive-table";
@@ -8,6 +8,7 @@ import moment from 'moment'
 import currencyConvert from '../../utils/currency';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+import ExportXlsx from '../common/ExportXlsx';
 dayjs.extend(customParseFormat);
 const { RangePicker } = DatePicker;
 export default function CustomerPaid() {
@@ -241,6 +242,41 @@ export default function CustomerPaid() {
             value: [dayjs().add(-90, 'd'), dayjs()],
         },
     ];
+    const handleExportData = async () => {
+        setIsLoading(true)
+        try {
+            const res = await axiosService(`reports/accountant/customer-paid?page=${1}&limit=${total}&startDate=${startDate}&endDate=${endDate}&sortBy=${sortBy}`)
+            if (res.data.code === 200) {
+                setIsLoading(false)
+                const mapData = res.data.data.items.map((x, i) => {
+                    return {
+                        stt: i,
+                        order_code: x.order_code,
+                        order_at: x.order_at,
+                        telesale: x.source_from,
+                        cashier: x.created_name,
+                        customer: x.customer_name,
+                        service: x.product_name,
+                        begin_owed: x.owedStart,
+                        receive_in_period: x.addMore,
+                        pay_in_period: x.totalInDate,
+                        remain:x.money_owed
+                    }
+                })
+                return mapData
+            } else {
+                message.error("Có lỗi xảy ra xin vui lòng thử lại")
+                console.error(data.message)
+                setIsLoading(false)
+                return []
+            }
+        } catch (error) {
+            console.error(error)
+            message.error("Có lỗi xảy ra xin vui lòng thử lại")
+            setIsLoading(false)
+            return []
+        }
+    }
     return (
         <Spin tip="Đang tải. Xin vui lòng chờ" size="large" spinning={isLoading}>
             <Drawer title="Tìm kiếm" placement="right" onClose={onClose} open={open}>
@@ -287,9 +323,12 @@ export default function CustomerPaid() {
             </Drawer>
             <Row className='mt-1'>
                 <Col xs={12}>
-                    <Button type="primary" className='ms-2' onClick={showDrawer} >
-                        <FilterOutlined />
-                    </Button>
+                    <div className="d-flex justify-content-between mb-2">
+                        <Button type="primary" className='ms-2' onClick={showDrawer} >
+                            <FilterOutlined />
+                        </Button>
+                        <ExportXlsx handleExportData={handleExportData} />
+                    </div>
                 </Col>
                 <Col xs={12} className="d-flex justify-content-end px-4">
                     <p>Hiển thị <span className='text-success fw-bold'>{data.length}</span> trên <span className='text-warning fw-bold'>{total}</span>
@@ -305,7 +344,7 @@ export default function CustomerPaid() {
                             columns,
                             dataSource: data,
                             pagination: false,
-                            scroll:{y:windowSize.current[1] || 500}
+                            scroll: { y: windowSize.current[1] || 500 }
                         }}
                         mobileBreakPoint={768}
                     />

@@ -1,11 +1,13 @@
-import { useEffect, useState,useRef } from "react"
-import { Spin, Pagination, Select, Button, message, Drawer } from "antd"
+import { useEffect, useState, useRef } from "react"
+import { Spin, Pagination, Select, Button, message, Drawer,Input,DatePicker } from "antd"
 import { Row, Col } from "react-bootstrap"
 import Table from "ant-responsive-table";
 import axiosService from "../../utils/axios.config";
 import { SearchOutlined, CloseOutlined, FilterOutlined } from '@ant-design/icons';
 import moment from 'moment'
 import currencyConvert from '../../utils/currency';
+import ExportXlsx from '../common/ExportXlsx';
+const { RangePicker } = DatePicker;
 export default function Collection() {
     const [isLoading, setIsLoading] = useState(false)
     const [data, setData] = useState([])
@@ -14,6 +16,10 @@ export default function Collection() {
     const [limit, setLimit] = useState(20)
     const [sortBy, setSortBy] = useState("date_desc")
     const [open, setOpen] = useState(false);
+    const [phone, setPhone] = useState("")
+    const [order, setOrder] = useState("")
+    const [startDate, setStartDate] = useState("")
+    const [endDate, setEndDate] = useState("")
     const windowSize = useRef([window.innerWidth, window.innerHeight]);
     const showDrawer = () => {
         setOpen(true);
@@ -141,10 +147,10 @@ export default function Collection() {
             showOnDesktop: true
         },
     ];
-    const getData = async (limitFetch = 20, pageFetch = 1, sort = "date_desc") => {
+    const getData = async (limitFetch = 20, pageFetch = 1, sort = "date_desc",orderId="",mobile="",s="",e="") => {
         setIsLoading(true)
         try {
-            const res = await axiosService(`reports/accountant/collection?page=${pageFetch}&limit=${limitFetch}&sortBy=${sort}`)
+            const res = await axiosService(`reports/accountant/collection?page=${pageFetch}&limit=${limitFetch}&mobile=${mobile}&orderId=${orderId}&startDate=${s}&endDate=${e}&sortBy=${sort}`)
             if (res.data.code === 200) {
                 const { items, meta, } = res.data.data
                 setData([...items])
@@ -162,10 +168,20 @@ export default function Collection() {
         }
     }
     const onChangePagination = async (page, pageSize) => {
-        await getData(pageSize, page)
+        await getData(pageSize, page,sortBy,order,phone,startDate,endDate)
         setPage(page)
         setLimit(pageSize)
         window.scrollTo(0, 0)
+    }
+    const onChangePhone = (e) => {
+        setPhone(e.target.value)
+    }
+    const onChangeOrder = (e) => {
+        setOrder(e.target.value)
+    }
+    const onChangeDate = (x, y) => {
+        setStartDate(y[0])
+        setEndDate(y[1])
     }
     useEffect(() => {
         async function fetchData() {
@@ -174,22 +190,68 @@ export default function Collection() {
         fetchData()
     }, [])
     const handleFilter = async () => {
-        await getData(limit, page, sortBy)
+        await getData(limit, page, sortBy,order,phone,startDate,endDate)
     }
     const clearFilter = async () => {
         setLimit(20)
         setPage(1)
         setSortBy("date_desc")
-        await getData(20, 1, "date_desc")
+        await getData(20, 1, "date_desc","","","","")
     }
     const onChangeSelectSortBy = (value) => {
         setSortBy(value)
+    }
+    const handleExportData = async () => {
+        setIsLoading(true)
+        try {
+            const res = await axiosService(`reports/accountant/collection?page=${1}&limit=${total}&mobile=${phone}&orderId=${order}&startDate=${startDate}&endDate=${endDate}&sortBy=${sortBy}`)
+            if (res.data.code === 200) {
+                setIsLoading(false)
+                const mapData = res.data.data.items.map((x, i) => {
+                    return {
+                        stt: i,
+                        order_code: x.order_code,
+                        order_at: x.order_at,
+                        telesale:x.source_from,
+                        cashier:x.created_name,
+                        customer: x.customer?.full_name || "",
+                        service: x.product_name,
+                        payment_type:x.payment_type,
+                        price:x.priceFinal
+                    }
+                })
+                return mapData
+            } else {
+                message.error("Có lỗi xảy ra xin vui lòng thử lại")
+                console.error(data.message)
+                setIsLoading(false)
+                return []
+            }
+        } catch (error) {
+            console.error(error)
+            message.error("Có lỗi xảy ra xin vui lòng thử lại")
+            setIsLoading(false)
+            return []
+        }
     }
     return (
         <Spin tip="Đang tải. Xin vui lòng chờ" size="large" spinning={isLoading}>
             <Drawer title="Tìm kiếm" placement="right" onClose={onClose} open={open}>
                 <Row>
-                    <Col xxl={12} xs={12}>
+                <Col xxl={12} xs={12}>
+                        <span>Số điện thoại:</span>
+                        <Input onChange={onChangePhone} placeholder="Nhập số điện thoại khách hàng" value={phone} />
+                    </Col>
+                    <Col xxl={12} xs={12} className="mt-2">
+                        <span>Mã hoá đơn:</span>
+                        <Input onChange={onChangeOrder} placeholder="Nhập mã hoá đơn" value={order} />
+                    </Col>
+                    <Col xxl={12} xs={12} className="mt-2">
+                        <span>Khoảng thời gian:</span>
+                        <br></br>
+                        <RangePicker className="w-100" onChange={onChangeDate} />
+                    </Col>
+                    <Col xxl={12} xs={12} className="mt-2">
                         <span>Sắp xếp theo:</span>
                         <br></br>
                         <Select
@@ -224,9 +286,12 @@ export default function Collection() {
             </Drawer>
             <Row className='mt-1'>
                 <Col xs={12}>
-                    <Button type="primary" className='ms-2' onClick={showDrawer} >
-                        <FilterOutlined />
-                    </Button>
+                    <div className="d-flex justify-content-between mb-2">
+                        <Button type="primary" className='ms-2' onClick={showDrawer} >
+                            <FilterOutlined />
+                        </Button>
+                        <ExportXlsx handleExportData={handleExportData} />
+                    </div>
                 </Col>
                 <Col xs={12} className="d-flex justify-content-end px-4">
                     <p>Hiển thị <span className='text-success fw-bold'>{data.length}</span> trên <span className='text-warning fw-bold'>{total}</span>
@@ -242,7 +307,7 @@ export default function Collection() {
                             columns,
                             dataSource: data,
                             pagination: false,
-                            scroll:{y:windowSize.current[1] || 500}
+                            scroll: { y: windowSize.current[1] || 500 }
                         }}
                         mobileBreakPoint={768}
                     />
