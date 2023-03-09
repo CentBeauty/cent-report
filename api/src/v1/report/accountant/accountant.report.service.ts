@@ -1013,4 +1013,85 @@ export class AccountantReportsService {
             return helper.error(error)
         }
     }
+    async packageCustomerYear(query) {
+        try {
+            const { year, product_name } = query
+
+            const startDate = moment(new Date(`${year}-01-01`)).startOf('day').format('YYYY-MM-DD HH:mm:ss');
+            const now = moment(new Date(`${year}-12-31`)).endOf('day').format('YYYY-MM-DD HH:mm:ss');
+
+            let queryOptions: LooseObject = {
+                price: 0,
+                order: {
+                    order_at: Between(
+                        new Date(startDate),
+                        new Date(now))
+                },
+            }
+            if(product_name && product_name.length >0){
+                queryOptions={
+                    ...queryOptions,
+                    product:{
+                        product_name : Like(`%${product_name}%`)
+                    }
+                }
+            }
+            const data = await this.orderItemRepository.find({
+                select: {
+                    id: true,
+                    price: true,
+                    product: {
+                        id: true,
+                        product_name: true,
+                    },
+                    order: {
+                        id: true,
+                        customer: {
+                            id: true
+                        },
+                        order_at: true
+                    }
+                },
+                where: queryOptions,
+                relations: {
+                    product: true,
+                    order: {
+                        customer: true
+                    },
+                },
+                cache: true
+            })
+
+            const mapData = data.map(x => {
+                return {
+                    id: x.id,
+                    product_name: x.product?.product_name || "",
+                    order_at: x.order.order_at,
+                    customer: x.order?.customer?.id || ""
+                }
+            })
+
+            let groupProduct = _.groupBy(mapData, (x) => {
+                return x.product_name
+            })
+
+            Object.keys(groupProduct).forEach(function (key1, index1) {
+                let groupByMonth = _.groupBy(groupProduct[key1], (x) => {
+                    return moment(new Date(x.order_at)).format('MM');
+                })
+                Object.keys(groupByMonth).forEach(function (key2, index2) {
+                    let groupByCustomer = _.groupBy(groupByMonth[key2], (y) => {
+                        return y.customer
+                    })
+                    groupByMonth[key2] = Object.keys(groupByCustomer).length
+                })
+                groupProduct[key1] = groupByMonth
+            });
+
+            return helper.success(Object.entries(groupProduct))
+        } catch (error) {
+            console.error(error)
+            return helper.error(error)
+        }
+    }
 }

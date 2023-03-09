@@ -73,4 +73,8 @@ export class AccountantReportsController {
     async countPackage(@Query() query) {
         return await this.AccountantReportsService.countPackage(query)
     }
+    @Get('/customer-package-year')
+    async packageCustomerYear(@Query() query) {
+        return await this.AccountantReportsService.packageCustomerYear(query)
+    }
 }
