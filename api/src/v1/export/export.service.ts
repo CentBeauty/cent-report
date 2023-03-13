@@ -275,11 +275,9 @@ export class ExportService {
         }
 
     }
-
     async processFile(content) {
         console.log(content);
     }
-
     async exportPackageDetail() {
         var start = new Date('2022-10-01')
         var end = new Date('2022-12-24')
@@ -387,7 +385,6 @@ export class ExportService {
         var urlS3 = await this.uploadFile(rows, "khach_hang_su_dung_the_xai_het_tien")
         return urlS3
     }
-
     async exportBill(startDate: string, endDate: string, limit, page) {
         try {
             const start = moment(new Date(startDate)).startOf("day").format("YYYY-MM-DD HH:mm:ss")

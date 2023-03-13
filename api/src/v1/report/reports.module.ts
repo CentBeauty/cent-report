@@ -11,6 +11,8 @@ import { Transaction } from '../entities/transaction.entity';
 import { AccountantReportsService } from './accountant/accountant.report.service';
 import { AccountantReportsController } from './accountant/accountant.report.controller';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ReportsService } from './report.service';
+import { ReportsController } from './report.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Order, OrderItem, User, Customer, Store, Package, Transaction, Booking])
@@ -20,8 +22,8 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
   providers: [AccountantReportsService, {
     provide: APP_INTERCEPTOR,
     useClass: CacheInterceptor,
-  },],
-  controllers: [AccountantReportsController],
+  },ReportsService],
+  controllers: [AccountantReportsController,ReportsController],
 })
 
 export class ReportModule { }

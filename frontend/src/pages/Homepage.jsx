@@ -1,14 +1,17 @@
 import { useEffect } from "react";
-
+import { Container, Row, Col } from "react-bootstrap"
+import QuarteRevenue from "../components/dashboards/QuarterRevenue";
 export default function Homepage() {
     useEffect(() => {
         document.title = 'Home page';
     }, [])
     return (
-        <>
-            <div className="wrapper">
-                <h1>Welcome back</h1>
-            </div>
-        </>
+        <Container fluid>
+            <Row>
+                <Col xxl={6} xs={12}>
+                    <QuarteRevenue></QuarteRevenue>
+                </Col>
+            </Row>
+        </Container>
     );
 }
