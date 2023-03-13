@@ -47,7 +47,7 @@ export class ReportsService {
             const startDateOfTheYear = `${year || 2023}-01-01 00:00:00`
             const endDateOfTheYear = `${year || 2023}-12-31 23:59:59`
             const {transaction,revenue} = await async.parallel({
-                revenue: (cb1) => {
+                revenue: (cb) => {
                     this.orderRepository.find({
                         select: {
                             id: true,
@@ -68,10 +68,10 @@ export class ReportsService {
                             const total = _.sumBy(groupByQuarter[key], function (o) { return o.total_price })
                             res.push({quarter: key,value:total,type:"Tổng doanh thu"})
                         }
-                        cb1(null, res)
+                        cb(null, res)
                     })
                 },
-                transaction: (cb1) => {
+                transaction: (cb) => {
                     this.transactionRepository.find({
                         select: {
                             id: true,
@@ -91,7 +91,7 @@ export class ReportsService {
                             const total = _.sumBy(groupByQuarter[key], function (o) { return o.paid_amount })
                             res.push({quarter: key,value:total,type:"Doanh thu thuần"})
                         }
-                        cb1(null, res)
+                        cb(null, res)
                     })
                 }
             })

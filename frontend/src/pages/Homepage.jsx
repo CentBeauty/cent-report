@@ -9,7 +9,10 @@ export default function Homepage() {
         <Container fluid>
             <Row>
                 <Col xxl={6} xs={12}>
-                    <QuarteRevenue></QuarteRevenue>
+                    <QuarteRevenue />
+                </Col>
+                <Col xxl={6} xs={12}>
+                    
                 </Col>
             </Row>
         </Container>

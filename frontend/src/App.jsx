@@ -1,6 +1,4 @@
 import 'antd/dist/reset.css';
-import { createBrowserHistory } from 'history';
-export const history = createBrowserHistory();
 import { Routes, Route } from 'react-router-dom';
 import Login from './pages/Login';
 import { AuthenticationMiddle } from "./middleware/authentication";
