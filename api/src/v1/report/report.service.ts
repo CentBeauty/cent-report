@@ -46,7 +46,7 @@ export class ReportsService {
         try {
             const startDateOfTheYear = `${year || 2023}-01-01 00:00:00`
             const endDateOfTheYear = `${year || 2023}-12-31 23:59:59`
-            const {transaction,revenue} = await async.parallel({
+            const { transaction, revenue } = await async.parallel({
                 revenue: (cb) => {
                     this.orderRepository.find({
                         select: {
@@ -66,7 +66,7 @@ export class ReportsService {
                         const groupByQuarter = _.groupBy(rs, (x) => moment(new Date(x.order_at)).format("Q"));
                         for (const key of Object.keys(groupByQuarter)) {
                             const total = _.sumBy(groupByQuarter[key], function (o) { return o.total_price })
-                            res.push({quarter: key,value:total,type:"Tổng doanh thu"})
+                            res.push({ quarter: key, value: total, type: "Tổng doanh thu" })
                         }
                         cb(null, res)
                     })
@@ -89,13 +89,207 @@ export class ReportsService {
                         const groupByQuarter = _.groupBy(rs, (x) => moment(new Date(x.created_at)).format("Q"));
                         for (const key of Object.keys(groupByQuarter)) {
                             const total = _.sumBy(groupByQuarter[key], function (o) { return o.paid_amount })
-                            res.push({quarter: key,value:total,type:"Doanh thu thuần"})
+                            res.push({ quarter: key, value: total, type: "Doanh thu thuần" })
                         }
                         cb(null, res)
                     })
                 }
             })
-            return helper.success([...revenue,...transaction])
+            return helper.success([...revenue, ...transaction])
+        } catch (error) {
+            console.error(error)
+            return helper.error(error)
+        }
+    }
+    async headerDash() {
+        try {
+            return async.parallel({
+                expectRevenue: (cb) => {
+                    this.bookingRepository.createQueryBuilder("booking")
+                        .select("booking.booking_item")
+                        .addSelect("booking.created_at")
+                        .addSelect("booking.store_id")
+                        .where("booking.store_id != :id", { id: 8 })
+                        .andWhere('booking.book_date BETWEEN :start_at AND :end_at', { start_at: startOfDay(new Date()), end_at: endOfDay(new Date()) })
+                        .andWhere("booking.book_status NOT IN (:...status)", { status: [5, 6, 7] })
+                        .leftJoinAndSelect("booking.stores", "store")
+                        .getRawMany().then(rs => {
+                            let total = 0
+                            rs.forEach(x => {
+                                const t = _.sumBy(x.product_ids, function (o) { return o.price || 0 })
+                                total += (t || 0)
+                            });
+                            cb(null, total)
+                        })
+                },
+                payByCash: (cb) => {
+                    this.transactionRepository.createQueryBuilder("transaction")
+                        .where("transaction.pay_type = :pay_type", { pay_type: "Tiền mặt" })
+                        .andWhere('order.order_at BETWEEN :start_at AND :end_at', { start_at: startOfDay(new Date()), end_at: endOfDay(new Date()) })
+                        .andWhere("transaction.status = :status", { status: 1 })
+                        .andWhere('transaction.soft_delete IS NULL')
+                        .andWhere("order.status = 3")
+                        .andWhere("order.store_id != :id", { id: 8 })
+                        .leftJoinAndSelect("transaction.order", "order")
+                        .leftJoinAndSelect("order.stores", "store")
+                        .getRawMany().then(rs => {
+                            let total = 0
+                            rs.forEach(function (x, index1) {
+                                const result = _.sumBy(x, function (o) { return (o.transaction_paid_amount || 0) });
+                                total += (result || 0)
+                            });
+                            cb(null, total)
+                        })
+                },
+                payTransfer: (cb) => {
+                    this.transactionRepository.createQueryBuilder("transaction")
+                        .where("transaction.pay_type = :pay_type", { pay_type: "Chuyển khoản" })
+                        .andWhere('transaction.soft_delete IS NULL')
+                        .andWhere('order.order_at BETWEEN :start_at AND :end_at', { start_at: startOfDay(new Date()), end_at: endOfDay(new Date()) })
+                        .andWhere("transaction.status = :status", { status: 1 })
+                        .andWhere("order.status = 3")
+                        .andWhere("order.store_id != :id", { id: 8 })
+                        .leftJoinAndSelect("transaction.order", "order")
+                        .leftJoinAndSelect("order.stores", "store")
+                        .getRawMany().then(rs => {
+                            let total = 0
+                            rs.forEach(function (x, index1) {
+                                const result = _.sumBy(x, function (o) { return (o.transaction_paid_amount || 0) });
+                                total += (result || 0)
+                            });
+                            cb(null, total)
+                        })
+                },
+                paySwipe: (cb) => {
+                    this.transactionRepository.createQueryBuilder("transaction")
+                        .where("transaction.pay_type = :pay_type", { pay_type: "Quẹt thẻ" })
+                        .andWhere('transaction.soft_delete IS NULL')
+                        .andWhere('order.order_at BETWEEN :start_at AND :end_at', { start_at: startOfDay(new Date()), end_at: endOfDay(new Date()) })
+                        .andWhere("transaction.status = :status", { status: 1 })
+                        .andWhere("order.status = 3")
+                        .andWhere("order.store_id != :id", { id: 8 })
+                        .leftJoinAndSelect("transaction.order", "order")
+                        .leftJoinAndSelect("order.stores", "store")
+                        .getRawMany().then(rs => {
+                            let total = 0
+                            rs.forEach(function (x, index1) {
+                                const result = _.sumBy(x, function (o) { return (o.transaction_paid_amount || 0) });
+                                total += (result || 0)
+                            });
+                            cb(null, total)
+                        })
+                },
+                receipt: (cb) => {
+                    this.transactionRepository.createQueryBuilder("transaction")
+                        .andWhere('transaction.soft_delete IS NULL')
+                        .andWhere('order.order_at BETWEEN :start_at AND :end_at', { start_at: startOfDay(new Date()), end_at: endOfDay(new Date()) })
+                        .andWhere("transaction.status = :status", { status: 1 })
+                        .andWhere("order.status = 3")
+                        .andWhere("order.store_id != :id", { id: 8 })
+                        .leftJoinAndSelect("transaction.order", "order")
+                        .leftJoinAndSelect("order.stores", "store")
+                        .getRawMany().then(rs => {
+                            let total = 0
+                            rs.forEach(function (x, index1) {
+                                const result = _.sumBy(x, function (o) { return (o.transaction_paid_amount || 0) });
+                                total += (result || 0)
+                            });
+                            cb(null, total)
+                        })
+                },
+                owed: (cb) => {
+                    let query = this.transactionRepository.createQueryBuilder("transaction")
+                        .andWhere("transaction.status = :status", { status: 2 })
+                        .andWhere('transaction.soft_delete IS NULL')
+                        .andWhere("order.store_id != :id", { id: 8 })
+                        .andWhere('transaction.created_at BETWEEN :start_at AND :end_at', { start_at: startOfDay(new Date()), end_at: endOfDay(new Date()) })
+                        .leftJoinAndSelect("transaction.order", "order")
+                        .leftJoinAndSelect("order.stores", "store")
+                    query.getRawMany().then(rs => {
+                        let total = 0
+                        rs.forEach(function (x, index1) {
+                            const result = _.sumBy(x, function (o) { return (o.transaction_paid_amount || 0) });
+                            total += (result || 0)
+                        });
+                        cb(null, total)
+                    })
+                },
+                bookings: (cb) => {
+                    this.bookingRepository.createQueryBuilder("booking")
+                        .select("booking.book_status")
+                        .addSelect("booking.store_id")
+                        .addSelect("booking.book_date")
+                        .where("booking.store_id != :id", { id: 8 })
+                        .andWhere('booking.book_date BETWEEN :start_at AND :end_at', { start_at: startOfDay(new Date()), end_at: endOfDay(new Date()) })
+                        .leftJoinAndSelect("booking.stores", "store")
+                        .getRawMany().then(async rs => {
+                             async.parallel({
+                                done: (cb) => {
+                                    const result = rs.filter(x => x.booking_book_status == 7)
+                                    cb(null, result.length || 0)
+                                },
+                                cancel: (cb) => {
+                                    const result = rs.filter(x => x.booking_book_status == 5)
+                                    cb(null, result.length || 0)
+                                },
+                                notCome: (cb) => {
+                                    const result = rs.filter(x => x.booking_book_status == 6)
+                                    cb(null, result.length || 0)
+                                },
+                                total: (cb) => {
+                                    cb(null, rs.length || 0)
+                                },
+                            }).then(r=>cb(null,r))
+                        })
+                },
+                orders:(cb)=>{
+                    this.orderRepository.count({
+                        select:{
+                            id:true,
+                            order_at:true,
+                        },
+                        where:{
+                        order_at: Between(
+                            new Date(startOfDay(new Date())),
+                            new Date(endOfDay(new Date()))
+                        )
+                    }}).then(rs=>cb(null,rs))
+                },
+                sumOwedToday:(cb)=>{
+                    this.orderRepository.find({
+                        select:{
+                            id:true,
+                            money_owed:true,
+                            order_at:true
+                        },
+                        where:{
+                        money_owed: Raw(alias => `${alias} > 0`),
+                        order_at: Between(
+                            new Date(startOfDay(new Date())),
+                            new Date(endOfDay(new Date()))
+                        )
+                    }}).then(rs=>{
+                        const result = _.sumBy(rs, function (o) { return (o.money_owed || 0) });
+                        cb(null,result)
+                    })
+                },
+                newCustomer:(cb)=>{
+                    this.customerRepository.count({
+                        select:{
+                            id:true,
+                            created_at:true
+                        },
+                        where:{
+                            created_at:Between(
+                                new Date(startOfDay(new Date())),
+                                new Date(endOfDay(new Date()))
+                            )
+                        }
+                    }).then(rs=>cb(null,rs))
+                }
+            }).then(rs => {
+                return helper.success(rs)
+            })
         } catch (error) {
             console.error(error)
             return helper.error(error)

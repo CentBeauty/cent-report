@@ -25,4 +25,8 @@ export class ReportsController {
         const {year} = query 
         return await this.ReportsService.dashboard(year)
     }
+    @Get('/header')
+    async headerDash() {
+        return await this.ReportsService.headerDash()
+    }
 }
