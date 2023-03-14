@@ -20,6 +20,7 @@ export default function CustomerPackage() {
     const [endDate, setEndDate] = useState("")
     const [sortBy, setSortBy] = useState("date_desc")
     const [open, setOpen] = useState(false);
+    const [type,setType] =useState("")
     const windowSize = useRef([window.innerWidth, window.innerHeight]);
     const showDrawer = () => {
         setOpen(true);
@@ -173,10 +174,10 @@ export default function CustomerPackage() {
         },
 
     ];
-    const getData = async (limitFetch = 20, pageFetch = 1, phoneFetch = "", orderId = "", start = "", end = "", sort = "date_desc") => {
+    const getData = async (limitFetch = 20, pageFetch = 1, phoneFetch = "", orderId = "", start = "", end = "", sort = "date_desc",t="") => {
         setIsLoading(true)
         try {
-            const res = await axiosService(`reports/accountant/customer-package?page=${pageFetch}&limit=${limitFetch}&mobile=${phoneFetch}&orderId=${orderId}&startDate=${start}&endDate=${end}&sortBy=${sort}`)
+            const res = await axiosService(`reports/accountant/customer-package?page=${pageFetch}&limit=${limitFetch}&mobile=${phoneFetch}&orderId=${orderId}&startDate=${start}&endDate=${end}&sortBy=${sort}&packageType=${t}`)
             if (res.data.code === 200) {
                 const { items, meta, } = res.data.data
                 setData([...items])
@@ -202,11 +203,11 @@ export default function CustomerPackage() {
     const onChangePagination = async (page, pageSize) => {
         setPage(page)
         setLimit(pageSize)
-        await getData(pageSize, page, phone, order, startDate, endDate, sortBy)
+        await getData(pageSize, page, phone, order, startDate, endDate, sortBy,type)
         window.scrollTo(0, 0)
     }
     const handleFilter = async () => {
-        await getData(limit, page, phone, order, startDate, endDate, sortBy)
+        await getData(limit, page, phone, order, startDate, endDate, sortBy,type)
     }
     const clearFilter = async () => {
         setOrder("")
@@ -216,7 +217,8 @@ export default function CustomerPackage() {
         setStartDate("")
         setEndDate("")
         setSortBy("date_desc")
-        await getData(20, 1, "", "", "", "", "date_desc")
+        setType("")
+        await getData(20, 1, "", "", "", "", "date_desc","")
     }
     useEffect(() => {
         async function fetchData() {
@@ -231,10 +233,13 @@ export default function CustomerPackage() {
     const onChangeSelectSortBy = (value) => {
         setSortBy(value)
     }
+    const onChangeSelectType = (value) => {
+        setType(value)
+    }
     const handleExportData = async () => {
         setIsLoading(true)
         try {
-            const res = await axiosService(`reports/accountant/customer-package?page=${1}&limit=${total}&mobile=${phone}&orderId=${order}&startDate=${startDate}&endDate=${endDate}&sortBy=${sortBy}`)
+            const res = await axiosService(`reports/accountant/customer-package?page=${1}&limit=${total}&mobile=${phone}&orderId=${order}&startDate=${startDate}&endDate=${endDate}&sortBy=${sortBy}&packageType=${type}`)
             if (res.data.code === 200) {
                 setIsLoading(false)
                 const mapData = res.data.data.items.map((x, i) => {
@@ -281,6 +286,29 @@ export default function CustomerPackage() {
                         <span>Khoảng thời gian:</span>
                         <br></br>
                         <RangePicker className="w-100" onChange={onChangeDate} />
+                    </Col>
+                    <Col xxl={12} xs={12} className="mt-2">
+                        <span>Loại thẻ:</span>
+                        <br></br>
+                        <Select
+                            value={type}
+                            className='w-100'
+                            onChange={onChangeSelectType}
+                            options={[
+                                {
+                                    label: "Tất cả",
+                                    value: ""
+                                },
+                                {
+                                    label: 'Thẻ BHVV',
+                                    value: 'BHVV',
+                                },
+                                {
+                                    label: 'Thẻ buổi',
+                                    value: 'ONE',
+                                },
+                            ]}
+                        />
                     </Col>
                     <Col xxl={12} xs={12} className="mt-2">
                         <span>Sắp xếp theo:</span>

@@ -221,7 +221,7 @@ export class AccountantReportsService {
 
     async CustomerPackage(query) {
         try {
-            const { limit, page, mobile, orderId, startDate, endDate, sortBy } = query
+            const { limit, page, mobile, orderId, startDate, endDate, sortBy,packageType } = query
 
             const options = {
                 limit: parseInt(limit) || 20,
@@ -262,6 +262,12 @@ export class AccountantReportsService {
                         },
                         price: Raw(alias => `${alias} > 0`),
                     }
+                }
+            }
+            if(packageType && packageType.length >0){
+                queryOptions={
+                    ...queryOptions,
+                    max_used : Raw(alias => `${alias} ${packageType==="BHVV" ? ">999" : "<999"}`)
                 }
             }
             const data = await paginate(this.packageRepository, options, {
