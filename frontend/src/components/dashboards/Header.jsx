@@ -33,7 +33,7 @@ export default function HeaderDashBoard() {
             <Skeleton active />
             :
             <Row>
-                <Col xxl={3} xs={6}>
+                <Col xxl={3} className="mt-1">
                     <Tag color="#f50" className="w-100 h-100">
                         <div className="d-flex justify-content-start">
                             <h6 className="me-2 mt-1">Doanh số dự kiến:</h6>
@@ -43,7 +43,7 @@ export default function HeaderDashBoard() {
                         </div>
                     </Tag>
                 </Col>
-                <Col xxl={3} xs={6}>
+                <Col xxl={3} className="mt-1">
                     <Tag color="#2db7f5" className="w-100">
                         <div className="d-flex justify-content-between">
                             <h6 className="me-2 mt-1">Doanh thu tuần:</h6><h5>{numeral(data?.receipt || 0).format('0a,0.00')} VNĐ</h5>
@@ -59,7 +59,7 @@ export default function HeaderDashBoard() {
                         </div>
                     </Tag>
                 </Col>
-                <Col xxl={3}>
+                <Col xxl={3} className="mt-1">
                     <Tag color="#87d068" className="w-100">
                         <div className="d-flex justify-content-between">
                             <h6 className="me-2 mt-1">Tổng số lịch:</h6><h5>{data?.bookings?.total || 0}</h5>
@@ -75,7 +75,7 @@ export default function HeaderDashBoard() {
                         </div>
                     </Tag>
                 </Col>
-                <Col xxl={3}>
+                <Col xxl={3} className="mt-1">
                     <Tag color="#108ee9" className="w-100 h-100">
                         <div className="d-flex justify-content-between">
                             <h6 className="me-2 mt-1">Số đơn hàng:</h6><h5>{data?.orders || 0}</h5>
