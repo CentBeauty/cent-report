@@ -62,16 +62,16 @@ export default function HeaderDashBoard() {
                 <Col xxl={3}>
                     <Tag color="#87d068" className="w-100">
                         <div className="d-flex justify-content-between">
-                            <h6 className="me-2 mt-1">Tổng số lịch:</h6><h5>{data?.booking?.total || 0}</h5>
+                            <h6 className="me-2 mt-1">Tổng số lịch:</h6><h5>{data?.bookings?.total || 0}</h5>
                         </div>
                         <div className="d-flex justify-content-between">
-                            <h6 className="me-2 mt-1">Tổng số lịch huỷ:</h6><h5>{data?.booking?.cancel || 0}</h5>
+                            <h6 className="me-2 mt-1">Tổng số lịch huỷ:</h6><h5>{data?.bookings?.cancel || 0}</h5>
                         </div>
                         <div className="d-flex justify-content-between">
-                            <h6 className="me-2 mt-1">Tổng số lịch hoàn thành:</h6><h5>{data?.booking?.done || 0}</h5>
+                            <h6 className="me-2 mt-1">Tổng số lịch hoàn thành:</h6><h5>{data?.bookings?.done || 0}</h5>
                         </div>
                         <div className="d-flex justify-content-between">
-                            <h6 className="me-2 mt-1">Tổng số lịch khách không đến:</h6><h5>{data?.booking?.notCome || 0}</h5>
+                            <h6 className="me-2 mt-1">Tổng số lịch khách không đến:</h6><h5>{data?.bookings?.notCome || 0}</h5>
                         </div>
                     </Tag>
                 </Col>

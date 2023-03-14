@@ -116,8 +116,10 @@ export class ReportsService {
                         .getRawMany().then(rs => {
                             let total = 0
                             rs.forEach(x => {
-                                const t = _.sumBy(x.product_ids, function (o) { return o.price || 0 })
-                                total += (t || 0)
+                                x.booking_booking_item.forEach(y=>{
+                                    const t = _.sumBy(y.product_ids, function (o) { return o.price || 0 })
+                                    total += (t || 0)
+                                })
                             });
                             cb(null, total)
                         })
@@ -136,6 +138,7 @@ export class ReportsService {
                             let total = 0
                             rs.forEach(function (x, index1) {
                                 const result = _.sumBy(x, function (o) { return (o.transaction_paid_amount || 0) });
+
                                 total += (result || 0)
                             });
                             cb(null, total)
