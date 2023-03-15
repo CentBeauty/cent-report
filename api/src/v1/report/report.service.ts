@@ -116,7 +116,7 @@ export class ReportsService {
                         .getRawMany().then(rs => {
                             let total = 0
                             rs.forEach(x => {
-                                x.booking_booking_item.forEach(y=>{
+                                x.booking_booking_item.forEach(y => {
                                     const t = _.sumBy(y.product_ids, function (o) { return o.price || 0 })
                                     total += (t || 0)
                                 })
@@ -135,37 +135,13 @@ export class ReportsService {
                         .leftJoinAndSelect("transaction.order", "order")
                         .leftJoinAndSelect("order.stores", "store")
                         .getRawMany().then(rs => {
-                            let total = 0
-                            rs.forEach(function (x, index1) {
-                                const result = _.sumBy(x, function (o) { return (o.transaction_paid_amount || 0) });
-
-                                total += (result || 0)
-                            });
-                            cb(null, total)
-                        })
-                },
-                payTransfer: (cb) => {
-                    this.transactionRepository.createQueryBuilder("transaction")
-                        .where("transaction.pay_type = :pay_type", { pay_type: "Chuyển khoản" })
-                        .andWhere('transaction.soft_delete IS NULL')
-                        .andWhere('order.order_at BETWEEN :start_at AND :end_at', { start_at: startOfDay(new Date()), end_at: endOfDay(new Date()) })
-                        .andWhere("transaction.status = :status", { status: 1 })
-                        .andWhere("order.status = 3")
-                        .andWhere("order.store_id != :id", { id: 8 })
-                        .leftJoinAndSelect("transaction.order", "order")
-                        .leftJoinAndSelect("order.stores", "store")
-                        .getRawMany().then(rs => {
-                            let total = 0
-                            rs.forEach(function (x, index1) {
-                                const result = _.sumBy(x, function (o) { return (o.transaction_paid_amount || 0) });
-                                total += (result || 0)
-                            });
+                            const total = _.sumBy(rs, function (o) { return (o.transaction_paid_amount || 0) });
                             cb(null, total)
                         })
                 },
                 paySwipe: (cb) => {
                     this.transactionRepository.createQueryBuilder("transaction")
-                        .where("transaction.pay_type = :pay_type", { pay_type: "Quẹt thẻ" })
+                        .where("transaction.pay_type IN (:...pay_types)", { pay_types: ["Quẹt thẻ","Chuyển khoản"] })
                         .andWhere('transaction.soft_delete IS NULL')
                         .andWhere('order.order_at BETWEEN :start_at AND :end_at', { start_at: startOfDay(new Date()), end_at: endOfDay(new Date()) })
                         .andWhere("transaction.status = :status", { status: 1 })
@@ -174,11 +150,7 @@ export class ReportsService {
                         .leftJoinAndSelect("transaction.order", "order")
                         .leftJoinAndSelect("order.stores", "store")
                         .getRawMany().then(rs => {
-                            let total = 0
-                            rs.forEach(function (x, index1) {
-                                const result = _.sumBy(x, function (o) { return (o.transaction_paid_amount || 0) });
-                                total += (result || 0)
-                            });
+                            const total = _.sumBy(rs, function (o) { return (o.transaction_paid_amount || 0) });
                             cb(null, total)
                         })
                 },
@@ -192,11 +164,7 @@ export class ReportsService {
                         .leftJoinAndSelect("transaction.order", "order")
                         .leftJoinAndSelect("order.stores", "store")
                         .getRawMany().then(rs => {
-                            let total = 0
-                            rs.forEach(function (x, index1) {
-                                const result = _.sumBy(x, function (o) { return (o.transaction_paid_amount || 0) });
-                                total += (result || 0)
-                            });
+                            const total = _.sumBy(rs, function (o) { return (o.transaction_paid_amount || 0) });
                             cb(null, total)
                         })
                 },
@@ -226,7 +194,7 @@ export class ReportsService {
                         .andWhere('booking.book_date BETWEEN :start_at AND :end_at', { start_at: startOfDay(new Date()), end_at: endOfDay(new Date()) })
                         .leftJoinAndSelect("booking.stores", "store")
                         .getRawMany().then(async rs => {
-                             async.parallel({
+                            async.parallel({
                                 done: (cb) => {
                                     const result = rs.filter(x => x.booking_book_status == 7)
                                     cb(null, result.length || 0)
@@ -242,53 +210,55 @@ export class ReportsService {
                                 total: (cb) => {
                                     cb(null, rs.length || 0)
                                 },
-                            }).then(r=>cb(null,r))
+                            }).then(r => cb(null, r))
                         })
                 },
-                orders:(cb)=>{
+                orders: (cb) => {
                     this.orderRepository.count({
-                        select:{
-                            id:true,
-                            order_at:true,
+                        select: {
+                            id: true,
+                            order_at: true,
                         },
-                        where:{
-                        order_at: Between(
-                            new Date(startOfDay(new Date())),
-                            new Date(endOfDay(new Date()))
-                        )
-                    }}).then(rs=>cb(null,rs))
-                },
-                sumOwedToday:(cb)=>{
-                    this.orderRepository.find({
-                        select:{
-                            id:true,
-                            money_owed:true,
-                            order_at:true
-                        },
-                        where:{
-                        money_owed: Raw(alias => `${alias} > 0`),
-                        order_at: Between(
-                            new Date(startOfDay(new Date())),
-                            new Date(endOfDay(new Date()))
-                        )
-                    }}).then(rs=>{
-                        const result = _.sumBy(rs, function (o) { return (o.money_owed || 0) });
-                        cb(null,result)
-                    })
-                },
-                newCustomer:(cb)=>{
-                    this.customerRepository.count({
-                        select:{
-                            id:true,
-                            created_at:true
-                        },
-                        where:{
-                            created_at:Between(
+                        where: {
+                            order_at: Between(
                                 new Date(startOfDay(new Date())),
                                 new Date(endOfDay(new Date()))
                             )
                         }
-                    }).then(rs=>cb(null,rs))
+                    }).then(rs => cb(null, rs))
+                },
+                sumOwedToday: (cb) => {
+                    this.orderRepository.find({
+                        select: {
+                            id: true,
+                            money_owed: true,
+                            order_at: true
+                        },
+                        where: {
+                            money_owed: Raw(alias => `${alias} > 0`),
+                            order_at: Between(
+                                new Date(startOfDay(new Date())),
+                                new Date(endOfDay(new Date()))
+                            )
+                        }
+                    }).then(rs => {
+                        const result = _.sumBy(rs, function (o) { return (o.money_owed || 0) });
+                        cb(null, result)
+                    })
+                },
+                newCustomer: (cb) => {
+                    this.customerRepository.count({
+                        select: {
+                            id: true,
+                            created_at: true
+                        },
+                        where: {
+                            created_at: Between(
+                                new Date(startOfDay(new Date())),
+                                new Date(endOfDay(new Date()))
+                            )
+                        }
+                    }).then(rs => cb(null, rs))
                 }
             }).then(rs => {
                 return helper.success(rs)

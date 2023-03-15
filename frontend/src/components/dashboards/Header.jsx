@@ -39,23 +39,23 @@ export default function HeaderDashBoard() {
                             <h6 className="me-2 mt-1">Doanh số dự kiến:</h6>
                         </div>
                         <div className="d-flex justify-content-end">
-                            <h5>{numeral(data?.expectRevenue || 0).format('0a,0.00')} VNĐ</h5>
+                            <h5>{numeral(data?.expectRevenue || 0).format('0,0')} VNĐ</h5>
                         </div>
                     </Tag>
                 </Col>
                 <Col xxl={3} className="mt-1">
                     <Tag color="#2db7f5" className="w-100">
                         <div className="d-flex justify-content-between">
-                            <h6 className="me-2 mt-1">Doanh thu tuần:</h6><h5>{numeral(data?.receipt || 0).format('0a,0.00')} VNĐ</h5>
+                            <h6 className="me-2 mt-1">Doanh thu tuần:</h6><h5>{numeral(data?.receipt || 0).format('0,0')} VNĐ</h5>
                         </div>
                         <div className="d-flex justify-content-between">
-                            <h6 className="me-2 mt-1">Tiền chuyển khoản:</h6><h5>{numeral(data?.payTransfer || 0).format('0a,0.00')} VNĐ</h5>
+                            <h6 className="me-2 mt-1">Tiền chuyển khoản/quẹt thẻ:</h6><h5>{numeral(data?.paySwipe || 0).format('0,0')} VNĐ</h5>
                         </div>
                         <div className="d-flex justify-content-between">
-                            <h6 className="me-2 mt-1">Tiền thu nợ:</h6><h5>{numeral(data?.owed || 0).format('0a,0.00')} VNĐ</h5>
+                            <h6 className="me-2 mt-1">Tiền thu nợ:</h6><h5>{numeral(data?.owed || 0).format('0,0')} VNĐ</h5>
                         </div>
                         <div className="d-flex justify-content-between">
-                            <h6 className="me-2 mt-1">Tiền mặt:</h6><h5>{numeral(data?.payByCash || 0).format('0a,0.00')} VNĐ</h5>
+                            <h6 className="me-2 mt-1">Tiền mặt:</h6><h5>{numeral(data?.payByCash || 0).format('0,0')} VNĐ</h5>
                         </div>
                     </Tag>
                 </Col>
@@ -81,7 +81,7 @@ export default function HeaderDashBoard() {
                             <h6 className="me-2 mt-1">Số đơn hàng:</h6><h5>{data?.orders || 0}</h5>
                         </div>
                         <div className="d-flex justify-content-between">
-                            <h6 className="me-2 mt-1">Nợ chưa thu:</h6><h5>{numeral(data?.sumOwedToday || 0).format('0a,0.00')} VNĐ</h5>
+                            <h6 className="me-2 mt-1">Nợ chưa thu:</h6><h5>{numeral(data?.sumOwedToday || 0).format('0,0')} VNĐ</h5>
                         </div>
                         <div className="d-flex justify-content-between">
                             <h6 className="me-2 mt-1">Số khách hàng mới:</h6><h5>{data?.newCustomer || 0}</h5>
