@@ -12,7 +12,6 @@ import { OrderListParam } from './order.interface';
 import { OrderItem } from '../entities/order-item.entity'
 import { Package } from '../entities/package.entity'
 import { Workbook } from 'exceljs'
-import * as tmp from 'tmp'
 import * as AWS from "aws-sdk";
 import * as moment from 'moment';
 import * as dotenv from 'dotenv';
@@ -53,9 +52,8 @@ export class ExportService {
     dataFile
     async exportCustomerService() {
         try {
-            let newDate = new Date
-            var start = new Date('2023-01-22')
-            var end = new Date('2023-03-08')
+            var start = new Date('2022-01-01')
+            var end = new Date('2023-12-31')
             end.setDate(end.getDate() + 1);
             let dataOrderItem = await this.orderRepo.createQueryBuilder('order')
                 .where("order.soft_delete IS NULL")
@@ -63,11 +61,11 @@ export class ExportService {
                 .andWhere("orderItem.product_name like :name", { name: `%${"bhvv"}%` })
                 .innerJoinAndSelect("order.customers", "customers")
                 .leftJoinAndSelect("order.orderItem", "orderItem")
-                // .andWhere(
-                //     'order.order_at BETWEEN :start_at AND :end_at',
-                //     { start_at: startOfDay(start), end_at: endOfDay(end) })
-                // .orderBy('customers.id', 'DESC')
-                // .orderBy('order.order_at', 'DESC')
+                .andWhere(
+                    'order.order_at BETWEEN :start_at AND :end_at',
+                    { start_at: startOfDay(start), end_at: endOfDay(end) })
+                .orderBy('customers.id', 'DESC')
+                .orderBy('order.order_at', 'DESC')
                 .getRawMany()
 
             var data = await this.exportDataOrderDetail(dataOrderItem)
@@ -194,7 +192,6 @@ export class ExportService {
                 itemRow['total_price'] = String(item.orderItem_price * quantity - item.orderItem_discount)
                 itemRow[yearOrderAt] = String(item.orderItem_quantity)
                 itemRow[yearMonthOrderAt] = timeMonthOrderAt
-
                 mapCustomerProducts[keyMap] = itemRow
             }
         }
@@ -212,8 +209,7 @@ export class ExportService {
         })
         mapCustomerProducts = {}
 
-        var urlS3 = await this.uploadFile(rows, "chi_tiet_khach_hang_su_dung_dich_vu_bhvv")
-        return urlS3
+        return helper.success(rows)
     }
     async uploadFile(row, name) {
         var fs = require('fs');

@@ -221,7 +221,7 @@ export class AccountantReportsService {
 
     async CustomerPackage(query) {
         try {
-            const { limit, page, mobile, orderId, startDate, endDate, sortBy,packageType } = query
+            const { limit, page, mobile, orderId, startDate, endDate, sortBy, packageType } = query
 
             const options = {
                 limit: parseInt(limit) || 20,
@@ -264,10 +264,10 @@ export class AccountantReportsService {
                     }
                 }
             }
-            if(packageType && packageType.length >0){
-                queryOptions={
+            if (packageType && packageType.length > 0) {
+                queryOptions = {
                     ...queryOptions,
-                    max_used : Raw(alias => `${alias} ${packageType==="BHVV" ? ">999" : "<999"}`)
+                    max_used: Raw(alias => `${alias} ${packageType === "BHVV" ? ">999" : "<999"}`)
                 }
             }
             const data = await paginate(this.packageRepository, options, {
@@ -1034,11 +1034,11 @@ export class AccountantReportsService {
                         new Date(now))
                 },
             }
-            if(product_name && product_name.length >0){
-                queryOptions={
+            if (product_name && product_name.length > 0) {
+                queryOptions = {
                     ...queryOptions,
-                    product:{
-                        product_name : Like(`%${product_name}%`)
+                    product: {
+                        product_name: Like(`%${product_name}%`)
                     }
                 }
             }
@@ -1095,6 +1095,156 @@ export class AccountantReportsService {
             });
 
             return helper.success(Object.entries(groupProduct))
+        } catch (error) {
+            console.error(error)
+            return helper.error(error)
+        }
+    }
+    async packageCountByMonth(query) {
+        try {
+            let { start, end,orderId, } = query
+            start = new Date(`${start || 2022}-01-01`)
+            end = new Date(`${end || 2023}-12-31`)
+            end.setDate(end.getDate() + 1);
+
+            let queryFilter = this.orderRepository.createQueryBuilder('order')
+                .where("order.soft_delete IS NULL")
+                .andWhere("order.status = 3")
+                .andWhere("orderItem.product_name like :name", { name: `%${"bhvv"}%` })
+                .innerJoinAndSelect("order.customers", "customers")
+                .leftJoinAndSelect("order.orderItem", "orderItem")
+                .andWhere('order.order_at BETWEEN :start_at AND :end_at', { start_at: startOfDay(start), end_at: endOfDay(end) })
+                .orderBy('customers.id', 'DESC')
+                .orderBy('order.order_at', 'DESC')
+
+            
+
+            let dataOrderItem = await queryFilter.getRawMany()
+            var mapCustomerProducts = {}
+            var row1 = constant.defaultExportOrderDetail
+
+            for (let item of dataOrderItem) {
+                var filter = false
+                if (item.orderItem_product_name == 'Thẻ cọc') {
+                    continue
+                }
+
+                if (!item.orderItem_employee_service_name1
+                    && !item.orderItem_employee_service_name2
+                    && !item.orderItem_employee_service_name3
+                    && !item.orderItem_employee_service_name4
+                    && !item.orderItem_employee_service_name5
+                ) {
+                    filter = true
+                }
+
+                if (item.orderItem_price > 0 || item.new_package) {
+                    filter = false
+                }
+
+                if (filter) {
+                    continue
+                }
+                let orderAt = new Date(item.order_order_at)
+                if (!item.customers_id || !item.orderItem_product_name) {
+                    continue
+                }
+
+
+                var yearOrderAt = new Date(item.order_order_at).getFullYear()
+                var yearMonthOrderAt = new Date(item.order_order_at).getFullYear() + '-' + (new Date(item.order_order_at).getMonth() + 1)
+                var yearMonthDayOrderAt = new Date(item.order_order_at).getFullYear() + '-' + (new Date(item.order_order_at).getMonth() + 1) + '-' + orderAt.getDate()
+
+                if (!row1[yearOrderAt] || typeof row1[yearOrderAt] == 'undefined') {
+                    row1[yearOrderAt] = yearOrderAt
+                }
+
+                if (!row1[yearMonthOrderAt] || typeof row1[yearMonthOrderAt] == 'undefined') {
+                    row1[yearMonthOrderAt] = yearMonthOrderAt
+                }
+                let newRow1 = {}
+                Object.entries(row1).map(x => {
+                    newRow1[x[0]] = ''
+                })
+
+
+                var keyMap = item.customers_id + item.orderItem_product_name
+                if (mapCustomerProducts[keyMap] && typeof mapCustomerProducts[keyMap] != 'undefined') {
+                    let itemRow = { ...mapCustomerProducts[keyMap] }
+
+                    if (new Date(itemRow['order_first_at']) >= new Date(yearMonthDayOrderAt)) {
+                        itemRow['order_first_at'] = yearMonthDayOrderAt
+                    }
+                    if (item.orderItem_price == 0 && item.orderItem_discount == 0) {
+                        itemRow['quantity_using'] = String(Number(itemRow['quantity_using']) + item.orderItem_quantity)
+                        if (!itemRow[yearOrderAt]) {
+                            itemRow[yearOrderAt] = '0'
+                        }
+                        itemRow[yearOrderAt] = String(Number(itemRow[yearOrderAt]) + Number(item.orderItem_quantity))
+                        if (!itemRow[yearMonthOrderAt] || typeof itemRow[yearMonthOrderAt] == 'undefined') {
+                            itemRow[yearMonthOrderAt] = 1
+                        } else {
+                            itemRow[yearMonthOrderAt] = itemRow[yearMonthOrderAt]  +1
+                        }
+
+                    }
+
+                    if (item.orderItem_price > 0 || item.new_package) {
+                        itemRow['total_price'] = String(Number(itemRow['total_price']) + item.orderItem_price * item.orderItem_quantity - item.orderItem_discount)
+                        itemRow['by_date'] = yearMonthDayOrderAt
+                        itemRow['order_code'] += ',' + item.order_order_code
+
+                        if (!itemRow[yearOrderAt] || typeof itemRow[yearOrderAt] == 'undefined') {
+                            itemRow[yearOrderAt] = String(item.orderItem_quantity)
+                        } else {
+                            if (!itemRow[yearOrderAt]) {
+                                itemRow[yearOrderAt] = '0'
+                            }
+                            itemRow[yearOrderAt] = String(Number(itemRow[yearOrderAt]) + Number(item.orderItem_quantity))
+                        }
+                    }
+
+                    mapCustomerProducts[keyMap] = itemRow
+                } else {
+                    var itemRow = { ...newRow1 }
+                    let timeMonthOrderAt = ''
+                    let byDate = ''
+                    let quantity_using = 0
+                    if (item.orderItem_price == 0 && item.orderItem_discount == 0) {
+                        timeMonthOrderAt = yearMonthDayOrderAt
+                        quantity_using += item.orderItem_quantity
+                    }
+                    if (item.orderItem_price > 0) {
+                        byDate = yearMonthDayOrderAt
+                        itemRow['order_code'] = item.order_order_code
+                    }
+                    itemRow['customer_name'] = item.customers_full_name
+                    itemRow['customer_mobile'] = item.customers_mobile
+                    itemRow['product_name'] = item.orderItem_product_name
+                    itemRow['order_first_at'] = yearMonthDayOrderAt
+                    itemRow['by_date'] = byDate
+                    itemRow['quantity_using'] = String(quantity_using)
+                    itemRow['total_price'] = String(item.orderItem_price - item.orderItem_discount)
+                    itemRow[yearOrderAt] = String(item.orderItem_quantity)
+                    itemRow[yearMonthOrderAt] = timeMonthOrderAt.split(",").length
+                    mapCustomerProducts[keyMap] = itemRow
+                }
+            }
+
+            let rows = []
+            rows.push(Object.values(row1))
+            let newRow1 = {}
+            Object.entries(row1).map(x => {
+                newRow1[x[0]] = ''
+            })
+
+            Object.entries(mapCustomerProducts).map(x => {
+                let newRow = { ...newRow1, ...Object(x[1]) }
+                rows.push(Object.values(newRow))
+            })
+            mapCustomerProducts = {}
+
+            return helper.success(rows)
         } catch (error) {
             console.error(error)
             return helper.error(error)

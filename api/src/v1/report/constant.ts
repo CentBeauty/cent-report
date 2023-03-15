@@ -50,9 +50,7 @@ export const defaultExportOrderDetail = {
     order_first_at: "Ngày mua lần đầu",
     product_name: "Dịch vụ & sản phẩm",
     order_code: "Mã đơn hàng mua",
-    order_code_using: "Mã đơn hàng sửa dụng",
     by_date: "Thời gian mua",
-    quantity: "Số lượng mua",
     quantity_using: "Số lượng sử dụng",
     total_price: "Doanh thu sau khi giảm giá",
 }
