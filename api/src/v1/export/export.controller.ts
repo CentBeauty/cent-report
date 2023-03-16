@@ -27,8 +27,8 @@ export class ExportCustomerServiceController {
 
     @Get('customer-service')
     @Header('Content-Type', 'application/json')
-    async exportOrderList() {
-        return await this.exportService.exportCustomerService();
+    async exportOrderList(@Query() query) {
+        return await this.exportService.exportCustomerService(query);
     }
 
     @Get('bill')

@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from "react"
 import "../styles/login.style.css"
 import axiosService from "../utils/axios.config";
-import { message, Checkbox, Form, Input } from "antd";
+import { message, Spin, Form, Input } from "antd";
 import { useNavigate } from "react-router-dom";
 export default function Login() {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
+    const [isLoading, setIsLoading] = useState(false)
     let navigate = useNavigate();
 
     const onChangeEmail = (e) => {
@@ -14,34 +15,40 @@ export default function Login() {
     const onChangePassword = (e) => {
         setPassword(e.target.value)
     }
+
     useEffect(() => {
         document.title = 'Login page';
     }, []);
     const handleSubmit = async () => {
+        setIsLoading(true)
         try {
-
             const payload = {
                 "email": email,
                 "password": password
             }
             const { data } = await axiosService("auth/login", "POST", payload)
-            if (data.code ===200) {
+            if (data.code === 200) {
                 const { access_token, expiresIn } = data.data
                 localStorage.setItem("access_token", access_token)
                 localStorage.setItem("expiresIn", expiresIn)
                 return navigate("/");
+            } else {
+                message.error("Đăng nhập thất bại")
+                console.log(data.message)
+                setIsLoading(false)
             }
 
         } catch (error) {
             message.error("Đăng nhập thất bại")
             console.log(error)
+            setIsLoading(false)
         }
     }
     const onFinish = (values) => {
         handleSubmit()
     };
     return (
-        <>
+        <Spin spinning={isLoading} size="large" tip="Đang tải xin vui lòng chờ">
             <section className="h-100 gradient-form">
                 <div className="container py-5 h-100">
                     <div className="row d-flex justify-content-center align-items-center h-100">
@@ -123,6 +130,6 @@ export default function Login() {
                     </div>
                 </div>
             </section>
-        </>
+        </Spin>
     )
 }

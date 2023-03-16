@@ -2,21 +2,24 @@ import { useEffect, useState } from "react"
 import { Spin, DatePicker, Button, message, Drawer, Input } from "antd"
 import { Row, Col, Table } from "react-bootstrap"
 import axiosService from "../../utils/axios.config";
-import { SearchOutlined, CloseOutlined, FilterOutlined } from '@ant-design/icons';
+import { SearchOutlined, CloseOutlined, FilterOutlined, VerticalLeftOutlined } from '@ant-design/icons';
 import moment from "moment"
 import dayjs from 'dayjs';
 import "../../styles/fixHeader.style.css"
 import 'react-bootstrap-table2-paginator/dist/react-bootstrap-table2-paginator.min.css'
 import paginationFactory from 'react-bootstrap-table2-paginator';
+import { useNavigate } from "react-router-dom";
 
 export default function CustomerPackageMonth() {
     const [isLoading, setIsLoading] = useState(false)
     const [data, setData] = useState([])
-    const [headers,setHeaders] = useState([])
+    const [headers, setHeaders] = useState([])
     const [open, setOpen] = useState(false);
     const [startYear, setStartYear] = useState(moment(new Date()).format('YYYY'))
     const [endYear, setEndYear] = useState(moment(new Date()).format('YYYY'))
-    const [name, setName] = useState("")
+
+    let navigate = useNavigate();
+
     const showDrawer = () => {
         setOpen(true);
     };
@@ -50,6 +53,7 @@ export default function CustomerPackageMonth() {
             } else {
                 console.log(res)
                 message.error(res.data.message)
+                setIsLoading(false)
             }
         } catch (error) {
             console.error(error)
@@ -63,7 +67,23 @@ export default function CustomerPackageMonth() {
         }
         fetchData()
     }, [])
-    console.log("data", data)
+    const handleExport = async () =>{
+        try {
+            setIsLoading(true)
+            const res = await axiosService(`export/customer-service?end=${startYear}&start=${endYear}`)
+            if (res.data.code === 200) {
+                return window.open(res.data.data, '_blank');
+            } else {
+                console.log(res)
+                message.error(res.data.message)
+                setIsLoading(false)
+            }
+        } catch (error) {
+            console.error(error)
+            message.error("Lỗi xuất báo cáo")
+            setIsLoading(false)
+        }
+    }
     return (
         <Spin tip="Đang tải. Dữ liệu lớn có thể mất vài phút. Vui lòng chờ" size="large" spinning={isLoading}>
             <Drawer title="Tìm kiếm" placement="right" onClose={onClose} open={open}>
@@ -98,30 +118,33 @@ export default function CustomerPackageMonth() {
                         <Button type="primary" className='ms-2' onClick={showDrawer} >
                             <FilterOutlined />
                         </Button>
+                        <Button type="primary" style={{ backgroundColor: "green" }} onClick={handleExport} >
+                            <VerticalLeftOutlined /> <span>Xuất dữ liệu</span>
+                        </Button>
                     </div>
                 </Col>
             </Row>
             <Row className='mt-0'>
                 <Col xs={12} className="w-100">
                     {data.length > 0 &&
-                        <Table striped bordered hover responsive className="table-fixed" pagination={ paginationFactory() }>
+                        <Table striped bordered hover responsive className="table-fixed" pagination={paginationFactory()}>
                             <thead style={{ position: "sticky", top: 0 }}>
                                 <tr>
-                                    {headers.map(x=>{
-                                        return<th>{x}</th>
+                                    {headers.map(x => {
+                                        return <th>{x}</th>
                                     })}
                                 </tr>
                             </thead>
                             <tbody className="scroll-table">
-                                    {data.map(x=>{
-                                        return <tr>
-                                           {
-                                            x.map(y=>{
-                                                return  <td>{y}</td>
+                                {data.map(x => {
+                                    return <tr>
+                                        {
+                                            x.map(y => {
+                                                return <td>{y}</td>
                                             })
-                                           }
-                                        </tr>
-                                    })}
+                                        }
+                                    </tr>
+                                })}
                             </tbody>
                         </Table>
                     }

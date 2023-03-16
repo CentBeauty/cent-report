@@ -16,6 +16,7 @@ export default function ExportXlsx({ handleExportData, handleLoading }) {
             message.error("Không có dữ liệu để xuất")
         }
     }
+    
     return (
         <Button type="primary" style={{ backgroundColor: "green" }} onClick={handleExport} >
             <VerticalLeftOutlined /> <span>Xuất dữ liệu</span>

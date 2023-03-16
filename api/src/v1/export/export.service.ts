@@ -50,10 +50,11 @@ export class ExportService {
     ) { }
 
     dataFile
-    async exportCustomerService() {
+    async exportCustomerService(query) {
         try {
-            var start = new Date('2022-01-01')
-            var end = new Date('2023-12-31')
+            let { start, end} = query
+            start = new Date(`${start || 2022}-01-01`)
+            end = new Date(`${end || 2023}-12-31`)
             end.setDate(end.getDate() + 1);
             let dataOrderItem = await this.orderRepo.createQueryBuilder('order')
                 .where("order.soft_delete IS NULL")
@@ -140,9 +141,9 @@ export class ExportService {
                     }
                     itemRow[yearOrderAt] = String(Number(itemRow[yearOrderAt]) + Number(item.orderItem_quantity))
                     if (!itemRow[yearMonthOrderAt] || typeof itemRow[yearMonthOrderAt] == 'undefined') {
-                        itemRow[yearMonthOrderAt] = yearMonthDayOrderAt
+                        itemRow[yearMonthOrderAt] = 1
                     } else {
-                        itemRow[yearMonthOrderAt] += ',' + yearMonthDayOrderAt
+                        itemRow[yearMonthOrderAt] = itemRow[yearMonthOrderAt]  +1
                     }
 
                 }
@@ -191,7 +192,7 @@ export class ExportService {
                 itemRow['quantity_using'] = String(quantity_using)
                 itemRow['total_price'] = String(item.orderItem_price * quantity - item.orderItem_discount)
                 itemRow[yearOrderAt] = String(item.orderItem_quantity)
-                itemRow[yearMonthOrderAt] = timeMonthOrderAt
+                itemRow[yearMonthOrderAt] = timeMonthOrderAt.split(",").length
                 mapCustomerProducts[keyMap] = itemRow
             }
         }
@@ -209,7 +210,9 @@ export class ExportService {
         })
         mapCustomerProducts = {}
 
-        return helper.success(rows)
+        const data = await this.uploadFile(rows,"chi_tiet_khach_hang_su_dung_the")
+
+        return helper.success(data)
     }
     async uploadFile(row, name) {
         var fs = require('fs');
