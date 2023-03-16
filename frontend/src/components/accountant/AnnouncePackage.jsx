@@ -18,6 +18,8 @@ export default function Announce() {
     const [open, setOpen] = useState(false);
     const [start, setStart] = useState("")
     const [end, setEnd] = useState("")
+    const [dangers,setDangers] = useState(0)
+    const [normal,setNormal] = useState(0)
     const windowSize = useRef([window.innerWidth, window.innerHeight]);
     const showDrawer = () => {
         setOpen(true);
@@ -144,7 +146,7 @@ export default function Announce() {
         setPhone(e.target.value)
     }
     const onChangeOrder = (e) => {
-        setStatus(e.target.value)
+        setOrder(e.target.value)
     }
     const handleFilter = async () => {
         await getData(limit, page, phone, order, status, sortBy, start, end)
@@ -154,7 +156,10 @@ export default function Announce() {
         try {
             const res = await axiosService(`reports/accountant/announce-package?page=${pageFetch}&limit=${limitFetch}&mobile=${phoneFetch}&status=${statusFetch}&orderId=${orderId}&sortBy=${sort}&start=${s}&end=${e}`)
             if (res.data.code === 200) {
-                const { items, meta, } = res.data.data
+                const { items, meta, } = res.data.data.table
+                console.log("res.data.data",res.data.data)
+                setDangers(res.data.data.dangers)
+                setNormal(res.data.data.normal)
                 setData([...items])
                 setTotal(meta.totalItems)
                 setIsLoading(false)
@@ -313,8 +318,8 @@ export default function Announce() {
                     </div>
                 </Col>
                 <Col xs={12} className="d-flex justify-content-end px-4">
-                    <p>Hiển thị <span className='text-success fw-bold'>{data.length}</span> trên <span className='text-warning fw-bold'>{total}</span>.
-                        {/* Tổng số tiền nợ: <span className='text-danger'>{currencyConvert(sumOwed)}</span> .Tổng số: <span className='text-primary'>{currencyConvert(sum)}</span> */}
+                    <p className="me-3">Hiển thị <span className='text-success fw-bold'>{data.length}</span> trên <span className='text-warning fw-bold'>{total}</span>.</p>
+                    <p>Số thẻ báo động: <span className='text-danger fw-bold'>{dangers}</span>. Số thẻ bình thưởng <span className='text-success fw-bold'>{normal}</span>.
                     </p>
                 </Col>
             </Row>

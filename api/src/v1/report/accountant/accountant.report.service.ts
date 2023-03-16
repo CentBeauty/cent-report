@@ -139,80 +139,139 @@ export class AccountantReportsService {
     async AnnouncePackage(query) {
         try {
             const { limit, page, mobile, orderId, status, sortBy, start, end } = query
+            return await async.parallel({
+                table: (cb) => {
 
-            const options = {
-                limit: parseInt(limit) || 20,
-                page: parseInt(page) || 1
-            }
-
-            let queryOptions: LooseObject = {
-                product_name: Like("%BHVV%"),
-                max_used: Raw(alias => `${alias} > 9999`),
-                status: 1,
-                parent_package: IsNull(),
-                soft_delete: IsNull()
-            }
-
-            if (mobile && mobile.length > 0) {
-                queryOptions = {
-                    ...queryOptions,
-                    customer_mobile: Like(`%${mobile}%`)
-                }
-            }
-
-            if (orderId && orderId.length > 0) {
-                queryOptions = {
-                    ...queryOptions,
-                    order_code: orderId
-                }
-            }
-            if (status && status.length > 0) {
-                queryOptions = {
-                    ...queryOptions,
-                    count_used: Raw(alias => `${alias} ${status === AnnouncePackageStatus.DANGER ? ">= 11" : "<11"}`)
-                }
-            }
-            if (start && end && start.length > 0 && end.length > 0 && parseInt(start) <= parseInt(end)) {
-                queryOptions = {
-                    ...queryOptions,
-                    count_used: Between(parseInt(start), parseInt(end))
-                }
-            }
-            const data = await paginate(this.packageRepository, options, {
-                select: {
-                    customer_mobile: true,
-                    id: true,
-                    customer_name: true,
-                    order_code: true,
-                    package_code: true,
-                    product_name: true,
-                    max_used: true,
-                    count_used: true
-                },
-                where: queryOptions,
-                order: {
-                    created_at: (sortBy && sortBy.length > 0) ? sortBy === SortByEnum.DATE_ASC ? "ASC" : "DESC" : "DESC"
-                },
-                cache: true,
-            })
-
-            const { items } = data
-            const newItem = items.map((x, i) => {
-                return {
-                    key: `key-${i}`,
-                    ...x,
-                    package: {
-                        name: x.product_name,
-                        code: x.package_code
-                    },
-                    customer: {
-                        name: x.customer_name,
-                        phone: x.customer_mobile
+                    const options = {
+                        limit: parseInt(limit) || 20,
+                        page: parseInt(page) || 1
                     }
-                }
-            })
 
-            return helper.success({ ...data, items: newItem })
+                    let queryOptions: LooseObject = {
+                        product_name: Like("%BHVV%"),
+                        max_used: Raw(alias => `${alias} > 9999`),
+                        status: 1,
+                        parent_package: IsNull(),
+                        soft_delete: IsNull()
+                    }
+
+                    if (mobile && mobile.length > 0) {
+                        queryOptions = {
+                            ...queryOptions,
+                            customer_mobile: Like(`%${mobile}%`)
+                        }
+                    }
+
+                    if (orderId && orderId.length > 0) {
+                        queryOptions = {
+                            ...queryOptions,
+                            order_code: orderId
+                        }
+                    }
+                    if (status && status.length > 0) {
+                        queryOptions = {
+                            ...queryOptions,
+                            count_used: Raw(alias => `${alias} ${status === AnnouncePackageStatus.DANGER ? ">= 11" : "<11"}`)
+                        }
+                    }
+                    if (start && end && start.length > 0 && end.length > 0 && parseInt(start) <= parseInt(end)) {
+                        queryOptions = {
+                            ...queryOptions,
+                            count_used: Between(parseInt(start), parseInt(end))
+                        }
+                    }
+                    paginate(this.packageRepository, options, {
+                        select: {
+                            customer_mobile: true,
+                            id: true,
+                            customer_name: true,
+                            order_code: true,
+                            package_code: true,
+                            product_name: true,
+                            max_used: true,
+                            count_used: true
+                        },
+                        where: queryOptions,
+                        order: {
+                            created_at: (sortBy && sortBy.length > 0) ? sortBy === SortByEnum.DATE_ASC ? "ASC" : "DESC" : "DESC"
+                        },
+                        cache: true,
+                    }).then(data => {
+                        const { items } = data
+                        const newItem = items.map((x, i) => {
+                            return {
+                                key: `key-${i}`,
+                                ...x,
+                                package: {
+                                    name: x.product_name,
+                                    code: x.package_code
+                                },
+                                customer: {
+                                    name: x.customer_name,
+                                    phone: x.customer_mobile
+                                }
+                            }
+                        })
+                        cb(null, { ...data, items: newItem })
+                    })
+                },
+                dangers:(cb)=>{
+                    let queryOptions: LooseObject = {
+                        count_used : Raw(alias => `${alias} > 10`),
+                        parent_package: IsNull(),
+                        soft_delete: IsNull(),
+                        status: 1,
+                        product_name: Like("%BHVV%"),
+                        max_used: Raw(alias => `${alias} > 9999`),
+                    }
+
+                    if (mobile && mobile.length > 0) {
+                        queryOptions = {
+                            ...queryOptions,
+                            customer_mobile: Like(`%${mobile}%`)
+                        }
+                    }
+
+                    if (orderId && orderId.length > 0) {
+                        queryOptions = {
+                            ...queryOptions,
+                            order_code: orderId
+                        }
+                    }
+                    this.packageRepository.count({
+                        where:queryOptions
+                    }).then(rs=>cb(null,rs))
+                },
+                normal:(cb)=>{
+                    let queryOptions: LooseObject = {
+                        count_used :Between(0,10),
+                        parent_package: IsNull(),
+                        soft_delete: IsNull(),
+                        status: 1,
+                        product_name: Like("%BHVV%"),
+                        max_used: Raw(alias => `${alias} > 9999`),
+                    }
+
+                    if (mobile && mobile.length > 0) {
+                        queryOptions = {
+                            ...queryOptions,
+                            customer_mobile: Like(`%${mobile}%`)
+                        }
+                    }
+
+                    if (orderId && orderId.length > 0) {
+                        queryOptions = {
+                            ...queryOptions,
+                            order_code: orderId
+                        }
+                    }
+                    this.packageRepository.count({
+                        where:queryOptions
+                    }).then(rs=>cb(null,rs))
+                }
+            }).then(rs=>{
+                return helper.success(rs)
+            })
         } catch (error) {
             console.error(error)
             return helper.error(error)
@@ -1102,7 +1161,7 @@ export class AccountantReportsService {
     }
     async packageCountByMonth(query) {
         try {
-            let { start, end} = query
+            let { start, end } = query
             start = new Date(`${start || 2022}-01-01`)
             end = new Date(`${end || 2023}-12-31`)
             end.setDate(end.getDate() + 1);
@@ -1181,7 +1240,7 @@ export class AccountantReportsService {
                         if (!itemRow[yearMonthOrderAt] || typeof itemRow[yearMonthOrderAt] == 'undefined') {
                             itemRow[yearMonthOrderAt] = 1
                         } else {
-                            itemRow[yearMonthOrderAt] = itemRow[yearMonthOrderAt]  +1
+                            itemRow[yearMonthOrderAt] = itemRow[yearMonthOrderAt] + 1
                         }
 
                     }
@@ -1241,7 +1300,31 @@ export class AccountantReportsService {
             })
             mapCustomerProducts = {}
 
-            return helper.success(rows)
+            return helper.success(rows.length)
+        } catch (error) {
+            console.error(error)
+            return helper.error(error)
+        }
+    }
+    async packageCountByMonthV2(query) {
+        try {
+            const { start, end, limit, page } = query
+
+            const options = {
+                limit: parseInt(limit) || 100,
+                page: parseInt(page) || 1
+            }
+
+            const data = await paginate(this.packageRepository, options, {
+                relations: {
+                    orderItems: true
+                },
+                order: {
+                    created_at: "ASC"
+                }
+            })
+
+            return helper.success(data)
         } catch (error) {
             console.error(error)
             return helper.error(error)

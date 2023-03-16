@@ -81,4 +81,8 @@ export class AccountantReportsController {
     async packageCountByMonth(@Query() query) {
         return await this.AccountantReportsService.packageCountByMonth(query)
     }
+    @Get('/count-package-month-v2')
+    async packageCountByMonthV2(@Query() query) {
+        return await this.AccountantReportsService.packageCountByMonthV2(query)
+    }
 }
