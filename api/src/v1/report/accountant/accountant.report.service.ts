@@ -1102,7 +1102,7 @@ export class AccountantReportsService {
     }
     async packageCountByMonth(query) {
         try {
-            let { start, end,orderId, } = query
+            let { start, end} = query
             start = new Date(`${start || 2022}-01-01`)
             end = new Date(`${end || 2023}-12-31`)
             end.setDate(end.getDate() + 1);
@@ -1116,9 +1116,6 @@ export class AccountantReportsService {
                 .andWhere('order.order_at BETWEEN :start_at AND :end_at', { start_at: startOfDay(start), end_at: endOfDay(end) })
                 .orderBy('customers.id', 'DESC')
                 .orderBy('order.order_at', 'DESC')
-
-            
-
             let dataOrderItem = await queryFilter.getRawMany()
             var mapCustomerProducts = {}
             var row1 = constant.defaultExportOrderDetail
