@@ -3,5 +3,6 @@ export default{
     LOGIN_PAGE : "/login",
     ACCOUNTANT_PAGE: "/accountant",
     MARKETING_PAGE:"/marketing",
-    SALE_PAGE:"/sale"
+    SALE_PAGE:"/sale",
+    BOOKING_PAGE:"/booking"
 }

@@ -1,10 +1,19 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, OneToMany, UpdateDateColumn, BeforeInsert } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  OneToMany,
+  UpdateDateColumn,
+  BeforeInsert,
+} from 'typeorm';
 import { UseGuards } from '@nestjs/common';
-import { Category } from "./category.entity";
-import { ProductMeta } from "./product-meta.entity"
+import { Category } from './category.entity';
+import { ProductMeta } from './product-meta.entity';
 import * as crypto from 'crypto';
 import { OrderItem } from './order-item.entity';
-
 
 @Entity()
 export class Product {
@@ -23,14 +32,13 @@ export class Product {
   @Column({ nullable: true })
   base_price: number;
 
-
   @Column({ nullable: true })
   description: string;
 
   @Column({ nullable: true })
   discount: string;
 
-  @Column({ nullable: true, default: "đ" })
+  @Column({ nullable: true, default: 'đ' })
   type_discount: string;
 
   @Column({ nullable: true })
@@ -54,13 +62,13 @@ export class Product {
   @Column({ nullable: true })
   avata_s3_name: string;
 
-  @Column({ type: "timestamp", nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   soft_delete: Date;
 
-  @CreateDateColumn({ type: "timestamp" })
+  @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: "timestamp" })
+  @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
 
   @Column({ default: 1 })
@@ -75,7 +83,7 @@ export class Product {
   @Column({ nullable: true })
   category_id: number;
 
-  meta_object?: {}
+  meta_object?: {};
 
   @ManyToOne(() => Category, (category) => category.id)
   @JoinColumn({ name: 'category_id' })
@@ -83,5 +91,4 @@ export class Product {
 
   @OneToMany(() => ProductMeta, (productMeta) => productMeta.Product)
   meta?: ProductMeta[];
-
 }

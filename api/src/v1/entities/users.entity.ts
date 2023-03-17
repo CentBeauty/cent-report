@@ -1,5 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, CreateDateColumn,UpdateDateColumn, BeforeInsert } from "typeorm";
-import { Store } from "./stores.entity";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToMany,
+  JoinTable,
+  CreateDateColumn,
+  UpdateDateColumn,
+  BeforeInsert,
+} from 'typeorm';
+import { Store } from './stores.entity';
 @Entity()
 export class User {
   @PrimaryGeneratedColumn()
@@ -17,17 +26,17 @@ export class User {
   @Column({ nullable: true })
   position: string;
 
-  @Column({default: 1})
+  @Column({ default: 1 })
   status: number;
 
-  @Column({default: 2})
+  @Column({ default: 2 })
   role: number;
 
   @BeforeInsert()
   emailToLowerCase() {
     this.email = this.email.toLowerCase();
   }
-  
+
   @Column()
   password: string;
 
@@ -49,16 +58,19 @@ export class User {
   @Column({ nullable: true })
   updated_by: number;
 
-  @Column({ type: "timestamp", nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   soft_delete: Date;
-  
-  @CreateDateColumn({ type: "timestamp"})
+
+  @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: "timestamp"})
+  @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
 
-  @ManyToMany(() => Store, store => store.users, {cascade: true, eager: true})
+  @ManyToMany(() => Store, (store) => store.users, {
+    cascade: true,
+    eager: true,
+  })
   @JoinTable({
     name: 'store_user',
     joinColumn: { name: 'user_id', referencedColumnName: 'id' },

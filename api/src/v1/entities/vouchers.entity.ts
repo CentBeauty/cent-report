@@ -1,14 +1,31 @@
-import { Entity, Column, PrimaryGeneratedColumn, Index, OneToMany, UpdateDateColumn, CreateDateColumn, DeleteDateColumn } from 'typeorm';
-import { UniqueCodeEnum, ActivesEnum, IfEnum, ThenEnum, ApplyEnum,typeOnLyVoucher ,Status} from "../enums/columns.enum"
-import { Voucher_Condition } from "./conditions.entity"
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  Index,
+  OneToMany,
+  UpdateDateColumn,
+  CreateDateColumn,
+  DeleteDateColumn,
+} from 'typeorm';
+import {
+  UniqueCodeEnum,
+  ActivesEnum,
+  IfEnum,
+  ThenEnum,
+  ApplyEnum,
+  typeOnLyVoucher,
+  Status,
+} from '../enums/columns.enum';
+import { Voucher_Condition } from './conditions.entity';
 @Entity()
 export class Voucher_Code {
   @PrimaryGeneratedColumn()
   id: number;
-  @Index("code-idx")
+  @Index('code-idx')
   @Column({ nullable: true })
   code: string;
-  @Index("rule_name-idx")
+  @Index('rule_name-idx')
   @Column({ nullable: true })
   rule_name: string;
 
@@ -24,10 +41,10 @@ export class Voucher_Code {
   @Column({ default: ActivesEnum.isActive })
   active: number;
 
-  @Column({ type: "timestamp", nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   start_date: Date;
 
-  @Column({ type: "timestamp", nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   end_date: Date;
 
   @Column({ default: IfEnum.ALL })
@@ -63,7 +80,7 @@ export class Voucher_Code {
   @Column({ nullable: true })
   created_by: number;
 
-  @Column({ default:Status.APPLYING })
+  @Column({ default: Status.APPLYING })
   status: number;
 
   @Column({ default: 0 })
@@ -73,12 +90,12 @@ export class Voucher_Code {
   updated_by: number;
 
   @OneToMany(() => Voucher_Condition, (condition) => condition.voucher)
-  conditions: Voucher_Condition[]
+  conditions: Voucher_Condition[];
 
-  @CreateDateColumn({ type: "timestamp" })
+  @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: "timestamp" })
+  @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
   @DeleteDateColumn()
   deletedAt?: Date;

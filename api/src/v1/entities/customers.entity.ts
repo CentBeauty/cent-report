@@ -1,5 +1,16 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, OneToMany, UpdateDateColumn, CreateDateColumn, BeforeInsert, BeforeUpdate } from 'typeorm';
-import { Store } from "./stores.entity";
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToMany,
+  JoinTable,
+  OneToMany,
+  UpdateDateColumn,
+  CreateDateColumn,
+  BeforeInsert,
+  BeforeUpdate,
+} from 'typeorm';
+import { Store } from './stores.entity';
 import { Booking } from './bookings.entity';
 import { Package } from './package.entity';
 import { Order } from './orders.entity';
@@ -20,7 +31,7 @@ export class Customer {
   @Column({ default: 0 })
   gift_money: number;
 
-  @Column({ default: 0, })
+  @Column({ default: 0 })
   isRecoverPassword: number;
 
   @Column({ nullable: true })
@@ -120,12 +131,11 @@ export class Customer {
   @Column({ default: 1 })
   type: number;
 
-  @CreateDateColumn({ type: "timestamp" })
+  @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: "timestamp" })
+  @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
-
 
   @Column({ nullable: true })
   created_by: number;
@@ -136,13 +146,13 @@ export class Customer {
   @Column({ nullable: true })
   otp: string;
 
-  @Column("text",{nullable:true})
-  token_recover_password:string
+  @Column('text', { nullable: true })
+  token_recover_password: string;
 
-  @Column({ type: "timestamp", nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   otp_expired: Date;
 
-  @Column({ type: "timestamp", nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   soft_delete: Date;
 
   @ManyToMany(() => Store)
@@ -156,7 +166,7 @@ export class Customer {
   @OneToMany(() => Booking, (booking) => booking.customers)
   booking: Booking[];
 
-  @OneToMany(type => Package, packages => packages.customer)
+  @OneToMany((type) => Package, (packages) => packages.customer)
   packages: Package[];
 
   @OneToMany(() => Order, (order) => order.customers)

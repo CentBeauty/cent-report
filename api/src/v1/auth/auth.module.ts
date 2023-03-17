@@ -11,11 +11,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 dotenv.config();
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([User]),
-    PassportModule,
-  ],
-  providers: [ConfigService,AuthService, LocalStrategy],
+  imports: [TypeOrmModule.forFeature([User]), PassportModule],
+  providers: [ConfigService, AuthService, LocalStrategy],
   controllers: [AuthController],
 })
 export class AuthModule {}

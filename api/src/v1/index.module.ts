@@ -16,10 +16,8 @@ import { ExportModule } from './export/export.module';
     AuthModule,
     UsersModule,
     ReportModule,
-    ExportModule
+    ExportModule,
   ],
   providers: [],
-
 })
-
-export class ModuleV1 { }
+export class ModuleV1 {}

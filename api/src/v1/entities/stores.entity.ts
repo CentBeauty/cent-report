@@ -1,8 +1,16 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, CreateDateColumn,UpdateDateColumn, OneToMany} from "typeorm";
-import { User } from "./users.entity";
-import { Booking } from "./bookings.entity"
-import { Customer } from "./customers.entity";
-import { Order } from "./orders.entity";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToMany,
+} from 'typeorm';
+import { User } from './users.entity';
+import { Booking } from './bookings.entity';
+import { Customer } from './customers.entity';
+import { Order } from './orders.entity';
 
 @Entity()
 export class Store {
@@ -17,7 +25,7 @@ export class Store {
 
   @Column({ nullable: true })
   mobile: string;
-  
+
   @Column({ nullable: true })
   address: string;
 
@@ -28,12 +36,12 @@ export class Store {
   city: string;
 
   @Column({ nullable: true })
-  country: string;  
+  country: string;
 
   @Column({ nullable: true })
   google_map: string;
 
-  @Column({ type: "timestamp", nullable: true} )
+  @Column({ type: 'timestamp', nullable: true })
   soft_delete: Date;
 
   @Column({ nullable: true })
@@ -42,13 +50,13 @@ export class Store {
   @Column({ nullable: true })
   updated_by: number;
 
-  @CreateDateColumn({ type: "timestamp"})
+  @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: "timestamp"})
+  @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
 
-  @ManyToMany(() => User, user => user.stores)
+  @ManyToMany(() => User, (user) => user.stores)
   users: User[];
 
   @OneToMany(() => Booking, (booking) => booking.stores)
@@ -57,6 +65,6 @@ export class Store {
   @OneToMany(() => Order, (order) => order.stores)
   order?: Order[];
 
-  @ManyToMany(() => Customer, customer => customer.stores)
+  @ManyToMany(() => Customer, (customer) => customer.stores)
   customer: Customer[];
 }

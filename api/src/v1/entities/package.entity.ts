@@ -1,10 +1,19 @@
-import { Entity, Column, PrimaryGeneratedColumn, JoinColumn, OneToMany, ManyToOne, CreateDateColumn, UpdateDateColumn, OneToOne } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  JoinColumn,
+  OneToMany,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToOne,
+} from 'typeorm';
 import * as crypto from 'crypto';
 import { Product } from './product.entity';
 import { Customer } from './customers.entity';
 import { Store } from './stores.entity';
 import { OrderItem } from './order-item.entity';
-
 
 @Entity()
 export class Package {
@@ -14,7 +23,7 @@ export class Package {
   @Column({ nullable: true })
   type: string;
 
-  @Column({ type: "timestamp", nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   expiration_date: Date;
 
   @Column({ nullable: true })
@@ -36,28 +45,28 @@ export class Package {
   rules: string;
 
   @Column({ nullable: true })
-  max_used: number
+  max_used: number;
 
-  @Column({ type: "timestamp", nullable: true })
-  last_used: Date
+  @Column({ type: 'timestamp', nullable: true })
+  last_used: Date;
 
-  @Column({ type: "timestamp", nullable: true })
-  second_last_used: Date
+  @Column({ type: 'timestamp', nullable: true })
+  second_last_used: Date;
 
-  @Column({ type: "timestamp", nullable: true })
-  date_of_update: Date
+  @Column({ type: 'timestamp', nullable: true })
+  date_of_update: Date;
 
-  @Column({ type: "timestamp", nullable: true })
-  date_of_issue: Date
-
-  @Column({ nullable: true })
-  product_name: string
+  @Column({ type: 'timestamp', nullable: true })
+  date_of_issue: Date;
 
   @Column({ nullable: true })
-  customer_name: string
+  product_name: string;
 
   @Column({ nullable: true })
-  order_code: string
+  customer_name: string;
+
+  @Column({ nullable: true })
+  order_code: string;
 
   @Column({ default: 1 })
   created_by: number;
@@ -66,47 +75,46 @@ export class Package {
   updated_by: number;
 
   @Column({ nullable: true })
-  customer_id: number
+  customer_id: number;
 
   @Column({ nullable: true })
-  product_id: number
+  product_id: number;
 
   @Column({ nullable: true })
-  order_id: number
-
-
-  @Column({ nullable: true })
-  store_id: number
+  order_id: number;
 
   @Column({ nullable: true })
-  price_of_card: number
+  store_id: number;
 
   @Column({ nullable: true })
-  initial_amount: number
+  price_of_card: number;
 
   @Column({ nullable: true })
-  sale_card: number
+  initial_amount: number;
 
   @Column({ nullable: true })
-  note_package: string
+  sale_card: number;
 
   @Column({ nullable: true })
-  parent_package: number
+  note_package: string;
+
+  @Column({ nullable: true })
+  parent_package: number;
 
   @Column({ default: 0 })
-  rule_price: number
+  rule_price: number;
 
   // @ManyToOne(() => Package, (packages) => packages.id)
   // @JoinColumn({ name: 'parent_package' })
   // package: Package;
 
-  @CreateDateColumn({ type: "timestamp" })
+  @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: "timestamp" })
+  @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
 
-  @Column({ type: "timestamp", nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   soft_delete: Date;
 
   @ManyToOne(() => Customer, (customer) => customer.packages)
@@ -123,5 +131,4 @@ export class Package {
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.package)
   orderItems?: OrderItem[];
-
 }

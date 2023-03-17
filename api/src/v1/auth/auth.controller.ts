@@ -18,9 +18,8 @@ import { deleteKey } from '../utils/redis';
 export class AuthController {
   constructor(
     // private userService: UsersService,
-    private authService: AuthService,
-    // private CustomersService: CustomersService,
-  ) { }
+    private authService: AuthService, // private CustomersService: CustomersService,
+  ) {}
 
   @UseGuards(LocalAuthGuard)
   @Post('/login')
@@ -29,10 +28,13 @@ export class AuthController {
   }
 
   @Post('/logout')
-  async getUserLogout(@Response() response,@Headers() headers): Promise<Response> {
-    let {authorization} = headers
-    authorization = authorization.replace("Bearer ", "");
-    await deleteKey(authorization)
+  async getUserLogout(
+    @Response() response,
+    @Headers() headers,
+  ): Promise<Response> {
+    let { authorization } = headers;
+    authorization = authorization.replace('Bearer ', '');
+    await deleteKey(authorization);
     response.setHeader('Set-Cookie', this.authService.getCookieForLogOut());
     response.clearCookie('access_token');
     response.clearCookie('token');

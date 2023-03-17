@@ -3,10 +3,10 @@ import {
     HomeOutlined,
     PayCircleOutlined,
     SolutionOutlined,
-    PhoneOutlined
+    PhoneOutlined,
+    MenuOutlined
 } from '@ant-design/icons';
 import React, { useMemo, useState } from 'react';
-import accountantTabsEnum from '../../enums/accountantTabs.enum';
 import linkEnum from '../../enums/link.enum';
 import { Layout, Menu } from 'antd';
 const { Sider } = Layout;
@@ -30,12 +30,9 @@ export default function DesktopMenu() {
     }
     const items = [
         getItem('Trang chủ', linkEnum.HOME_PAGE, <HomeOutlined />),
-        getItem('Kế toán', linkEnum.ACCOUNTANT_PAGE, <PayCircleOutlined />,
-            // accountantTabsEnum.map(x=>{
-            //     return getItem(x.label, x.link)
-            // })
-            ),
-        getItem('Marketing', linkEnum.MARKETING_PAGE, <SolutionOutlined />,),
+        getItem('Booking', linkEnum.BOOKING_PAGE, <MenuOutlined />),
+        getItem('Kế toán', linkEnum.ACCOUNTANT_PAGE, <PayCircleOutlined />),
+        getItem('Marketing', linkEnum.MARKETING_PAGE, <SolutionOutlined />),
         getItem('Sale', linkEnum.SALE_PAGE, <PhoneOutlined />,),
     ];
     const handleRedirect = (link) => {

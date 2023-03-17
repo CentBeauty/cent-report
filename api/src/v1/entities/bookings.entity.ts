@@ -1,8 +1,19 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToOne, OneToMany, UpdateDateColumn, CreateDateColumn, BeforeInsert } from 'typeorm';
-import { Store } from './stores.entity'
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  OneToOne,
+  OneToMany,
+  UpdateDateColumn,
+  CreateDateColumn,
+  BeforeInsert,
+} from 'typeorm';
+import { Store } from './stores.entity';
 import { Customer } from './customers.entity';
 import { generateRandomString } from '../helpers/const';
-import { CaresoftStatus } from "../enums/caresoft.enum";
+import { CaresoftStatus } from '../enums/caresoft.enum';
 @Entity()
 export class Booking {
   @PrimaryGeneratedColumn()
@@ -21,15 +32,15 @@ export class Booking {
   @Column({ nullable: true })
   book_status: number; // trạng thái đã xác nhận, chờ phục vụ, hoàn thành...
 
-  @Column({ type: "datetime" })
+  @Column({ type: 'datetime' })
   book_date: Date | string; // đặt lịch hẹn vào ngày
 
-  @Column("json")
+  @Column('json')
   booking_item: {
-    'product_ids': { 'id': string; 'name': string }[];
-    'user_ids': { 'id': number; 'name': string }[];
-    'intend_time': number
-  }[]
+    product_ids: { id: string; name: string }[];
+    user_ids: { id: number; name: string }[];
+    intend_time: number;
+  }[];
 
   @ManyToOne(() => Store, (store) => store.booking)
   @JoinColumn({ name: 'store_id' })
@@ -39,7 +50,7 @@ export class Booking {
   @JoinColumn({ name: 'customer_id' })
   customers: Customer;
 
-  @Column("text", { nullable: true })
+  @Column('text', { nullable: true })
   description: string;
 
   @Column({ nullable: true })
@@ -68,10 +79,10 @@ export class Booking {
 
   @Column({ nullable: true })
   website_id: string;
- 
-  @CreateDateColumn({ type: "timestamp" })
+
+  @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: "timestamp" })
+  @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
 }

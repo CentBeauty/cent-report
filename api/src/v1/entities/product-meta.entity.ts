@@ -1,4 +1,13 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, BeforeInsert } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  BeforeInsert,
+} from 'typeorm';
 import * as crypto from 'crypto';
 import { Product } from './product.entity';
 @Entity()
@@ -18,5 +27,4 @@ export class ProductMeta {
   @ManyToOne(() => Product, (product) => product.id)
   @JoinColumn({ name: 'product_id' })
   Product?: Product;
-
 }

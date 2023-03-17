@@ -1,4 +1,4 @@
-import { Module, } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ModuleV1 } from './v1/index.module';
 import * as dotenv from 'dotenv';
@@ -14,15 +14,29 @@ import { Booking } from './v1/entities/bookings.entity';
 import { Product } from './v1/entities/product.entity';
 import { Category } from './v1/entities/category.entity';
 import { Package } from './v1/entities/package.entity';
-import { ProductMeta } from "./v1/entities/product-meta.entity"
+import { ProductMeta } from './v1/entities/product-meta.entity';
 import { Note } from './v1/entities/notes.entity';
-
 
 dotenv.config();
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Order, Transaction, Store, Customer, OrderItem, Package, Category, Product, Booking, Activity, Options,ProductMeta,Note]),
+    TypeOrmModule.forFeature([
+      User,
+      Order,
+      Transaction,
+      Store,
+      Customer,
+      OrderItem,
+      Package,
+      Category,
+      Product,
+      Booking,
+      Activity,
+      Options,
+      ProductMeta,
+      Note,
+    ]),
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: process.env.DB_HOST,
@@ -36,7 +50,5 @@ dotenv.config();
     ModuleV1,
   ],
   providers: [],
-
 })
-
-export class AppModule { }
+export class AppModule {}

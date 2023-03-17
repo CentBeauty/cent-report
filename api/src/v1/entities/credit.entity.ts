@@ -1,5 +1,16 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToOne, OneToMany, UpdateDateColumn, CreateDateColumn, BeforeInsert } from 'typeorm';
-import { Store } from './stores.entity'
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  OneToOne,
+  OneToMany,
+  UpdateDateColumn,
+  CreateDateColumn,
+  BeforeInsert,
+} from 'typeorm';
+import { Store } from './stores.entity';
 import { Customer } from './customers.entity';
 import { generateRandomString } from '../helpers/const';
 
@@ -31,7 +42,7 @@ export class Credit {
 
   @Column({ nullable: true })
   receiver_id: number;
-  
+
   @Column({ nullable: true })
   store_id: number;
 
@@ -47,6 +58,6 @@ export class Credit {
   @Column({ nullable: true })
   created_by_name: string;
 
-  @CreateDateColumn({ type: "timestamp" })
+  @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 }

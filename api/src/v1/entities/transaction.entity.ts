@@ -1,53 +1,60 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn,UpdateDateColumn, BeforeInsert} from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  BeforeInsert,
+} from 'typeorm';
 import { Store } from './stores.entity';
 import { Customer } from './customers.entity';
 import { User } from './users.entity';
 import { Order } from './orders.entity';
-
 
 @Entity()
 export class Transaction {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({nullable: true})
+  @Column({ nullable: true })
   paid_amount: number;
 
-  @Column({nullable: true})
+  @Column({ nullable: true })
   total_amount: number;
 
-  @Column({nullable: true})
+  @Column({ nullable: true })
   remain_amount: number;
 
-  @Column({nullable: true, unique: true})
+  @Column({ nullable: true, unique: true })
   transaction_code: string;
 
-  @Column({nullable: true})
+  @Column({ nullable: true })
   pay_type: string;
 
-
-  @Column({nullable: true})
+  @Column({ nullable: true })
   store_id: number;
 
-  @Column({nullable: true, default: 1})
+  @Column({ nullable: true, default: 1 })
   status: number;
 
-  @Column({default: 1})
+  @Column({ default: 1 })
   created_by: number;
 
-  @Column({default: 1})
+  @Column({ default: 1 })
   updated_by: number;
 
-  @Column({nullable: true})
-  pay_account_number: string
-  
-  @CreateDateColumn({ type: "timestamp"})
+  @Column({ nullable: true })
+  pay_account_number: string;
+
+  @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: "timestamp"})
+  @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
-  
-  @Column({ type: "timestamp", nullable: true} )
+
+  @Column({ type: 'timestamp', nullable: true })
   soft_delete: Date;
 
   @ManyToOne(() => Order, (order) => order.transaction)

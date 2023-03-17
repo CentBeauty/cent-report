@@ -1,4 +1,9 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn} from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+} from 'typeorm';
 
 @Entity()
 export class Activity {
@@ -9,14 +14,14 @@ export class Activity {
   id_user: number;
 
   @Column({ nullable: true })
-  action: String;
+  action: string;
 
   // @Column({ nullable: true })
   // detail: String;
 
-  @Column("json")
-  detail: {}
+  @Column('json')
+  detail: {};
 
-  @CreateDateColumn({ type: "timestamp" })
+  @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 }

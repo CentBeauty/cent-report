@@ -7,7 +7,7 @@ const crypto = require('crypto');
 import * as jwt from 'jsonwebtoken';
 import * as dotenv from 'dotenv';
 import { User } from '../entities/users.entity';
-import * as helper from "../helpers/response"
+import * as helper from '../helpers/response';
 dotenv.config();
 import { set } from '../utils/redis';
 import { RequestUser } from '../interfaces/req.user.interface';
@@ -18,10 +18,12 @@ export class AuthService {
 
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-  ) { }
+  ) {}
 
   async authentication(email: string, password: string) {
-    const user = await this.usersRepository.findOne({ where: { email: email } })
+    const user = await this.usersRepository.findOne({
+      where: { email: email },
+    });
 
     if (!user) return false;
 
@@ -42,39 +44,41 @@ export class AuthService {
         name: user.name,
         email: user.email,
         id: user.id,
-        role: user.role
+        role: user.role,
       };
 
-      const { privateKey, publicKey } = crypto.generateKeyPairSync("rsa", {
+      const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
         modulusLength: 4096,
         publicKeyEncoding: {
-          type: "pkcs1",
-          format: "pem",
+          type: 'pkcs1',
+          format: 'pem',
         },
         privateKeyEncoding: {
-          type: "pkcs1",
-          format: "pem",
+          type: 'pkcs1',
+          format: 'pem',
         },
-      })
+      });
       const expiresTime = process.env.EXPIRES_TIME;
 
-      const splitEx = expiresTime.slice(0,2)
+      const splitEx = expiresTime.slice(0, 2);
 
-      const ex = parseInt(splitEx) * 60 * 60 * 24
+      const ex = parseInt(splitEx) * 60 * 60 * 24;
 
       const token = jwt.sign(payload, privateKey, {
-        algorithm: "RS256",
-        expiresIn: ex || 2592000
-      })
-      await set(token, publicKey, ex || 2592000)
+        algorithm: 'RS256',
+        expiresIn: ex || 2592000,
+      });
+      await set(token, publicKey, ex || 2592000);
       return helper.success({
-        expiresIn: moment().add(expiresTime.slice(0, expiresTime.length - 1), 'days'),
+        expiresIn: moment().add(
+          expiresTime.slice(0, expiresTime.length - 1),
+          'days',
+        ),
         access_token: token,
-      })
+      });
     } catch (error) {
-      console.error(error)
-      return helper.error(error, "report.auth.login")
+      console.error(error);
+      return helper.error(error, 'report.auth.login');
     }
   }
-
 }

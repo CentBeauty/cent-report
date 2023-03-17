@@ -1,4 +1,15 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToOne, OneToMany, UpdateDateColumn, CreateDateColumn, BeforeInsert } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  OneToOne,
+  OneToMany,
+  UpdateDateColumn,
+  CreateDateColumn,
+  BeforeInsert,
+} from 'typeorm';
 import { Order } from './orders.entity';
 @Entity()
 export class Note {
@@ -8,7 +19,7 @@ export class Note {
   @OneToOne(() => Order, (order) => order.note)
   @JoinColumn({ name: 'order_id' })
   order: Order;
-  
+
   @Column({ nullable: true })
   content: string;
   @Column({ nullable: true })
@@ -20,9 +31,9 @@ export class Note {
   @Column({ nullable: true })
   results: string;
 
-  @CreateDateColumn({ type: "timestamp" })
+  @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: "timestamp" })
+  @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
 }
