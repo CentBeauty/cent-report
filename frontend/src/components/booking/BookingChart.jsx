@@ -55,16 +55,13 @@ export default function BookingChart() {
                 autoRotate: false,
             },
         },
-        
         meta: {
-            type: {
-                alias: '类别',
-            },
             sales: {
-                alias: '销售额',
+                alias: 'Số lượng',
             },
         },
     };
+    
     const config = {
         data:data?.type || [],
         xField: 'type',
@@ -87,11 +84,8 @@ export default function BookingChart() {
             },
         },
         meta: {
-            type: {
-                alias: '类别',
-            },
             sales: {
-                alias: '销售额',
+                alias: 'Số lượng',
             },
         },
     };
