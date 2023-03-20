@@ -13,6 +13,7 @@ import { AccountantReportsController } from './accountant/accountant.report.cont
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ReportsService } from './report.service';
 import { ReportsController } from './report.controller';
+import { BookingModule } from './booking/reports.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { ReportsController } from './report.controller';
     CacheModule.register({
       ttl: 60 * 60 * 24,
     }),
+    BookingModule
   ],
   providers: [
     AccountantReportsService,

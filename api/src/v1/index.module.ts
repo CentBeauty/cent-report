@@ -4,7 +4,6 @@ import { AuthModule } from './auth/auth.module';
 import { ReportModule } from './report/reports.module';
 import { UsersModule } from './users/users.module';
 import { ExportModule } from './export/export.module';
-
 @Module({
   imports: [
     RouterModule.register([
