@@ -1,9 +1,10 @@
 import { Column } from '@ant-design/plots';
 import { useState, useEffect } from 'react';
 import { Row, Col } from "react-bootstrap"
-import { DatePicker,Spin } from "antd"
+import { DatePicker, Spin } from "antd"
 import dayjs from 'dayjs';
 import axiosService from "../../utils/axios.config";
+import _ from "lodash"
 const { RangePicker } = DatePicker;
 
 export default function BookingChart() {
@@ -11,12 +12,15 @@ export default function BookingChart() {
     const [startDate, setStartDate] = useState(dayjs().format('YYYY-MM-DD'))
     const [endDate, setEndDate] = useState(dayjs().format('YYYY-MM-DD'))
     const [isLoading, setIsLoading] = useState(false)
+    const [typeTotal,setTypeTotal] = useState(0)
     const getData = async (start = dayjs().format('YYYY-MM-DD'), end = dayjs().format('YYYY-MM-DD')) => {
         setIsLoading(true)
         try {
             const res = await axiosService(`booking/chart?start=${start}&end=${end}`)
-            console.log(res)
             if (res.data.code === 200) {
+                const {type} = res.data.data
+                const total = _.sumBy(type, function(o) { return o.sales });
+                console.log("total",total)
                 setData(res.data.data)
                 setIsLoading(false)
             } else {
@@ -31,10 +35,10 @@ export default function BookingChart() {
     }
     useEffect(() => {
         async function fetchData() {
-            await getData(startDate,endDate)
+            await getData(startDate, endDate)
         }
         fetchData()
-    }, [startDate,endDate])
+    }, [startDate, endDate])
     const config1 = {
         data: data.status || [],
         xField: 'type',
@@ -49,6 +53,14 @@ export default function BookingChart() {
                 opacity: 0.6,
             },
         },
+        label: {
+            content: (originData) => {
+                console.log("originData", originData)
+                const val = parseFloat(originData.sales);
+                return ( (val /100) * 100 ).toFixed(1) + '%';
+            },
+            offset: 10,
+        },
         xAxis: {
             label: {
                 autoHide: true,
@@ -61,9 +73,9 @@ export default function BookingChart() {
             },
         },
     };
-    
+
     const config = {
-        data:data?.type || [],
+        data: data?.type || [],
         xField: 'type',
         yField: 'sales',
         label: {
